@@ -125,12 +125,6 @@ function RootComponent() {
     });
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
-    });
-    return () => sub.subscription.unsubscribe();
-  }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
