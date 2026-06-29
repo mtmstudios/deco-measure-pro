@@ -359,6 +359,7 @@ export type Database = {
           bemerkung: string | null
           breite_cm: number | null
           created_at: string
+          deckentyp: string | null
           etage: string | null
           id: string
           laenge_cm: number | null
@@ -372,6 +373,7 @@ export type Database = {
           bemerkung?: string | null
           breite_cm?: number | null
           created_at?: string
+          deckentyp?: string | null
           etage?: string | null
           id?: string
           laenge_cm?: number | null
@@ -385,6 +387,7 @@ export type Database = {
           bemerkung?: string | null
           breite_cm?: number | null
           created_at?: string
+          deckentyp?: string | null
           etage?: string | null
           id?: string
           laenge_cm?: number | null
