@@ -16,6 +16,7 @@ import { Route as AuthenticatedSyncRouteImport } from './routes/_authenticated/s
 import { Route as AuthenticatedProjekteRouteImport } from './routes/_authenticated/projekte'
 import { Route as AuthenticatedProjekteNeuRouteImport } from './routes/_authenticated/projekte.neu'
 import { Route as AuthenticatedProjektIdRouteImport } from './routes/_authenticated/projekt.$id'
+import { Route as AuthenticatedProjektIdVorschauRouteImport } from './routes/_authenticated/projekt.$id.vorschau'
 import { Route as AuthenticatedProjektIdRaumNeuRouteImport } from './routes/_authenticated/projekt.$id.raum.neu'
 import { Route as AuthenticatedProjektIdRaumRaumIdRouteImport } from './routes/_authenticated/projekt.$id.raum.$raumId'
 
@@ -54,6 +55,12 @@ const AuthenticatedProjektIdRoute = AuthenticatedProjektIdRouteImport.update({
   path: '/projekt/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProjektIdVorschauRoute =
+  AuthenticatedProjektIdVorschauRouteImport.update({
+    id: '/vorschau',
+    path: '/vorschau',
+    getParentRoute: () => AuthenticatedProjektIdRoute,
+  } as any)
 const AuthenticatedProjektIdRaumNeuRoute =
   AuthenticatedProjektIdRaumNeuRouteImport.update({
     id: '/raum/neu',
@@ -74,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/sync': typeof AuthenticatedSyncRoute
   '/projekt/$id': typeof AuthenticatedProjektIdRouteWithChildren
   '/projekte/neu': typeof AuthenticatedProjekteNeuRoute
+  '/projekt/$id/vorschau': typeof AuthenticatedProjektIdVorschauRoute
   '/projekt/$id/raum/$raumId': typeof AuthenticatedProjektIdRaumRaumIdRoute
   '/projekt/$id/raum/neu': typeof AuthenticatedProjektIdRaumNeuRoute
 }
@@ -84,6 +92,7 @@ export interface FileRoutesByTo {
   '/sync': typeof AuthenticatedSyncRoute
   '/projekt/$id': typeof AuthenticatedProjektIdRouteWithChildren
   '/projekte/neu': typeof AuthenticatedProjekteNeuRoute
+  '/projekt/$id/vorschau': typeof AuthenticatedProjektIdVorschauRoute
   '/projekt/$id/raum/$raumId': typeof AuthenticatedProjektIdRaumRaumIdRoute
   '/projekt/$id/raum/neu': typeof AuthenticatedProjektIdRaumNeuRoute
 }
@@ -96,6 +105,7 @@ export interface FileRoutesById {
   '/_authenticated/sync': typeof AuthenticatedSyncRoute
   '/_authenticated/projekt/$id': typeof AuthenticatedProjektIdRouteWithChildren
   '/_authenticated/projekte/neu': typeof AuthenticatedProjekteNeuRoute
+  '/_authenticated/projekt/$id/vorschau': typeof AuthenticatedProjektIdVorschauRoute
   '/_authenticated/projekt/$id/raum/$raumId': typeof AuthenticatedProjektIdRaumRaumIdRoute
   '/_authenticated/projekt/$id/raum/neu': typeof AuthenticatedProjektIdRaumNeuRoute
 }
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/sync'
     | '/projekt/$id'
     | '/projekte/neu'
+    | '/projekt/$id/vorschau'
     | '/projekt/$id/raum/$raumId'
     | '/projekt/$id/raum/neu'
   fileRoutesByTo: FileRoutesByTo
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/sync'
     | '/projekt/$id'
     | '/projekte/neu'
+    | '/projekt/$id/vorschau'
     | '/projekt/$id/raum/$raumId'
     | '/projekt/$id/raum/neu'
   id:
@@ -129,6 +141,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sync'
     | '/_authenticated/projekt/$id'
     | '/_authenticated/projekte/neu'
+    | '/_authenticated/projekt/$id/vorschau'
     | '/_authenticated/projekt/$id/raum/$raumId'
     | '/_authenticated/projekt/$id/raum/neu'
   fileRoutesById: FileRoutesById
@@ -190,6 +203,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjektIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/projekt/$id/vorschau': {
+      id: '/_authenticated/projekt/$id/vorschau'
+      path: '/vorschau'
+      fullPath: '/projekt/$id/vorschau'
+      preLoaderRoute: typeof AuthenticatedProjektIdVorschauRouteImport
+      parentRoute: typeof AuthenticatedProjektIdRoute
+    }
     '/_authenticated/projekt/$id/raum/neu': {
       id: '/_authenticated/projekt/$id/raum/neu'
       path: '/raum/neu'
@@ -221,12 +241,14 @@ const AuthenticatedProjekteRouteWithChildren =
   )
 
 interface AuthenticatedProjektIdRouteChildren {
+  AuthenticatedProjektIdVorschauRoute: typeof AuthenticatedProjektIdVorschauRoute
   AuthenticatedProjektIdRaumRaumIdRoute: typeof AuthenticatedProjektIdRaumRaumIdRoute
   AuthenticatedProjektIdRaumNeuRoute: typeof AuthenticatedProjektIdRaumNeuRoute
 }
 
 const AuthenticatedProjektIdRouteChildren: AuthenticatedProjektIdRouteChildren =
   {
+    AuthenticatedProjektIdVorschauRoute: AuthenticatedProjektIdVorschauRoute,
     AuthenticatedProjektIdRaumRaumIdRoute:
       AuthenticatedProjektIdRaumRaumIdRoute,
     AuthenticatedProjektIdRaumNeuRoute: AuthenticatedProjektIdRaumNeuRoute,
