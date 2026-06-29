@@ -1,9 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { buildEngineProjekt } from "@/lib/build-engine-projekt";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, AlertTriangle, AlertOctagon, ChevronDown, ChevronRight, FileDown, Send, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  AlertTriangle,
+  AlertOctagon,
+  ChevronDown,
+  ChevronRight,
+  FileDown,
+  Send,
+  Loader2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/projekt/$id/vorschau")({
@@ -11,24 +21,24 @@ export const Route = createFileRoute("/_authenticated/projekt/$id/vorschau")({
   component: Vorschau,
 });
 
-type RaumZeile = { raum_id: string; raum_name: string; formel: string; ergebnis: number };
-type Gruppe = {
-  code: string;
-  bezeichnung: string;
+type Zeile = { raum: string; formel: string; ergebnis: number };
+type Position = {
+  leistungs_code: string;
+  name: string;
   einheit: string;
-  raeume: RaumZeile[];
+  zeilen: Zeile[];
   endsumme: number;
 };
-type Befund = { stufe: "blocker" | "warnung"; meldung: string; raum_name?: string };
+type Befund = { schwere: "block" | "warnung"; code: string; raum?: string; message: string };
 type Antwort = {
   uebergabe: {
-    projekt_id: string;
-    projekt: { kunde: string; objekt_bezeichnung: string; auftrag_nr: string | null };
-    positionen: Gruppe[];
+    schema_version: string;
+    projekt: { kunde: string | null; objekt_bezeichnung: string | null; auftrag_nr: string | null; gewerk: string | null };
+    positionen: Position[];
+    kennzahlen?: any[];
   };
   befunde: Befund[];
-  blocker: Befund[];
-  warnungen: Befund[];
+  blocker: boolean;
 };
 
 const de = (n: number, frac = 2) =>
@@ -40,8 +50,9 @@ function Vorschau() {
   const { data, isLoading, error, refetch, isFetching } = useQuery<Antwort>({
     queryKey: ["vorschau", id],
     queryFn: async () => {
+      const engine = await buildEngineProjekt(id);
       const { data, error } = await supabase.functions.invoke("generate-positionen", {
-        body: { projekt: { id } },
+        body: { projekt: engine },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -49,8 +60,9 @@ function Vorschau() {
     },
   });
 
-  const blocker = data?.blocker ?? [];
-  const warnungen = data?.warnungen ?? [];
+  const befunde = data?.befunde ?? [];
+  const blocker = befunde.filter((b) => b.schwere === "block");
+  const warnungen = befunde.filter((b) => b.schwere === "warnung");
 
   return (
     <div className="pb-32">
@@ -76,7 +88,9 @@ function Vorschau() {
           <div className="rounded-xl border-2 border-destructive bg-destructive/10 p-4">
             <p className="font-semibold text-destructive">Fehler bei der Berechnung</p>
             <p className="text-sm mt-1">{(error as Error).message}</p>
-            <Button className="mt-3 h-12" onClick={() => refetch()}>Erneut versuchen</Button>
+            <Button className="mt-3 h-12" onClick={() => refetch()}>
+              Erneut versuchen
+            </Button>
           </div>
         ) : data ? (
           <>
@@ -87,11 +101,7 @@ function Vorschau() {
       </div>
 
       {data && (
-        <FooterActions
-          projektId={id}
-          uebergabe={data.uebergabe}
-          hasBlocker={blocker.length > 0}
-        />
+        <FooterActions projektId={id} antwort={data} hasBlocker={data.blocker} />
       )}
     </div>
   );
@@ -119,7 +129,8 @@ function BefundLeiste({ blocker, warnungen }: { blocker: Befund[]; warnungen: Be
             <AlertOctagon className="size-4" /> {blocker.length} Blocker
           </span>
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-warning text-warning-foreground text-sm font-bold">
-            <AlertTriangle className="size-4" /> {warnungen.length} Warnung{warnungen.length === 1 ? "" : "en"}
+            <AlertTriangle className="size-4" /> {warnungen.length} Warnung
+            {warnungen.length === 1 ? "" : "en"}
           </span>
         </div>
         <span className="ml-auto">
@@ -132,8 +143,8 @@ function BefundLeiste({ blocker, warnungen }: { blocker: Befund[]; warnungen: Be
             <li key={`b-${i}`} className="px-4 py-2 flex gap-2 bg-destructive/5">
               <AlertOctagon className="size-4 text-destructive shrink-0 mt-0.5" />
               <div className="text-sm">
-                {b.raum_name && <span className="font-semibold">{b.raum_name}: </span>}
-                {b.meldung}
+                {b.raum && <span className="font-semibold">{b.raum}: </span>}
+                {b.message}
               </div>
             </li>
           ))}
@@ -141,8 +152,8 @@ function BefundLeiste({ blocker, warnungen }: { blocker: Befund[]; warnungen: Be
             <li key={`w-${i}`} className="px-4 py-2 flex gap-2 bg-warning/5">
               <AlertTriangle className="size-4 text-warning-foreground shrink-0 mt-0.5" />
               <div className="text-sm">
-                {b.raum_name && <span className="font-semibold">{b.raum_name}: </span>}
-                {b.meldung}
+                {b.raum && <span className="font-semibold">{b.raum}: </span>}
+                {b.message}
               </div>
             </li>
           ))}
@@ -152,7 +163,7 @@ function BefundLeiste({ blocker, warnungen }: { blocker: Befund[]; warnungen: Be
   );
 }
 
-function PositionenListe({ positionen }: { positionen: Gruppe[] }) {
+function PositionenListe({ positionen }: { positionen: Position[] }) {
   if (positionen.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -162,14 +173,14 @@ function PositionenListe({ positionen }: { positionen: Gruppe[] }) {
   }
   return (
     <div className="space-y-3">
-      {positionen.map((g) => (
-        <PositionsKarte key={g.code} g={g} />
+      {positionen.map((p) => (
+        <PositionsKarte key={p.leistungs_code} p={p} />
       ))}
     </div>
   );
 }
 
-function PositionsKarte({ g }: { g: Gruppe }) {
+function PositionsKarte({ p }: { p: Position }) {
   const [open, setOpen] = useState(true);
   return (
     <div className="rounded-2xl border-2 border-border bg-card overflow-hidden">
@@ -178,25 +189,29 @@ function PositionsKarte({ g }: { g: Gruppe }) {
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center gap-2 px-4 py-3 active:bg-accent"
       >
-        {open ? <ChevronDown className="size-5 shrink-0" /> : <ChevronRight className="size-5 shrink-0" />}
-        <h3 className="text-base font-bold flex-1 text-left">{g.bezeichnung}</h3>
+        {open ? (
+          <ChevronDown className="size-5 shrink-0" />
+        ) : (
+          <ChevronRight className="size-5 shrink-0" />
+        )}
+        <h3 className="text-base font-bold flex-1 text-left">{p.name}</h3>
         <span className="inline-flex items-center px-2 py-0.5 rounded-md border-2 border-border text-sm font-bold">
-          {g.einheit}
+          {p.einheit}
         </span>
       </button>
       {open && (
         <div className="border-t divide-y">
-          {g.raeume.map((r, i) => (
+          {p.zeilen.map((z, i) => (
             <div key={i} className="px-4 py-2 flex items-baseline gap-3">
-              <span className="font-semibold w-24 shrink-0 truncate">{r.raum_name}</span>
-              <span className="text-sm text-muted-foreground flex-1 break-words">{r.formel}</span>
-              <span className="font-bold tabular-nums whitespace-nowrap">= {de(r.ergebnis)}</span>
+              <span className="font-semibold w-24 shrink-0 truncate">{z.raum}</span>
+              <span className="text-sm text-muted-foreground flex-1 break-words">{z.formel}</span>
+              <span className="font-bold tabular-nums whitespace-nowrap">= {de(z.ergebnis)}</span>
             </div>
           ))}
           <div className="px-4 py-3 flex items-baseline gap-3 bg-accent/40">
             <span className="font-bold flex-1">Endsumme</span>
-            <span className="text-lg font-extrabold tabular-nums">{de(g.endsumme)}</span>
-            <span className="text-sm font-semibold text-muted-foreground">{g.einheit}</span>
+            <span className="text-lg font-extrabold tabular-nums">{de(p.endsumme)}</span>
+            <span className="text-sm font-semibold text-muted-foreground">{p.einheit}</span>
           </div>
         </div>
       )}
@@ -206,27 +221,27 @@ function PositionsKarte({ g }: { g: Gruppe }) {
 
 function FooterActions({
   projektId,
-  uebergabe,
+  antwort,
   hasBlocker,
 }: {
   projektId: string;
-  uebergabe: Antwort["uebergabe"];
+  antwort: Antwort;
   hasBlocker: boolean;
 }) {
   const exportCsv = () => {
     const rows: string[] = [];
     rows.push(["Position", "Einheit", "Raum", "Formel", "Ergebnis"].join(";"));
-    for (const g of uebergabe.positionen) {
-      for (const r of g.raeume) {
-        rows.push([g.bezeichnung, g.einheit, r.raum_name, r.formel, de(r.ergebnis)].map(csv).join(";"));
+    for (const p of antwort.uebergabe.positionen) {
+      for (const z of p.zeilen) {
+        rows.push([p.name, p.einheit, z.raum, z.formel, de(z.ergebnis)].map(csv).join(";"));
       }
-      rows.push([g.bezeichnung, g.einheit, "Endsumme", "", de(g.endsumme)].map(csv).join(";"));
+      rows.push([p.name, p.einheit, "Endsumme", "", de(p.endsumme)].map(csv).join(";"));
     }
     const blob = new Blob(["\uFEFF" + rows.join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `aufmass-${uebergabe.projekt.auftrag_nr ?? projektId}.csv`;
+    a.download = `aufmass-${antwort.uebergabe.projekt.auftrag_nr ?? projektId}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -235,7 +250,7 @@ function FooterActions({
     mutationFn: async () => {
       const { error } = await supabase.from("uebergabe").insert({
         projekt_id: projektId,
-        daten: uebergabe as any,
+        daten: antwort.uebergabe as any,
       });
       if (error) throw error;
       await supabase.from("projekt").update({ status: "uebergeben" }).eq("id", projektId);
@@ -246,11 +261,7 @@ function FooterActions({
 
   return (
     <div className="fixed bottom-16 left-0 right-0 z-10 border-t bg-background px-3 py-3 flex gap-2 safe-area-inset-bottom">
-      <Button
-        variant="outline"
-        className="h-14 flex-1 text-base font-bold"
-        onClick={exportCsv}
-      >
+      <Button variant="outline" className="h-14 flex-1 text-base font-bold" onClick={exportCsv}>
         <FileDown className="size-5 mr-1" /> Export
       </Button>
       <Button
