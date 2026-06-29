@@ -15,7 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSyncRouteImport } from './routes/_authenticated/sync'
 import { Route as AuthenticatedProjekteIndexRouteImport } from './routes/_authenticated/projekte.index'
 import { Route as AuthenticatedProjekteNeuRouteImport } from './routes/_authenticated/projekte.neu'
-import { Route as AuthenticatedProjektIdRouteImport } from './routes/_authenticated/projekt.$id'
+import { Route as AuthenticatedProjektIdIndexRouteImport } from './routes/_authenticated/projekt.$id.index'
 import { Route as AuthenticatedProjektIdVorschauRouteImport } from './routes/_authenticated/projekt.$id.vorschau'
 import { Route as AuthenticatedProjektIdRaumNeuRouteImport } from './routes/_authenticated/projekt.$id.raum.neu'
 import { Route as AuthenticatedProjektIdRaumRaumIdRouteImport } from './routes/_authenticated/projekt.$id.raum.$raumId'
@@ -51,38 +51,39 @@ const AuthenticatedProjekteNeuRoute =
     path: '/projekte/neu',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedProjektIdRoute = AuthenticatedProjektIdRouteImport.update({
-  id: '/projekt/$id',
-  path: '/projekt/$id',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+const AuthenticatedProjektIdIndexRoute =
+  AuthenticatedProjektIdIndexRouteImport.update({
+    id: '/projekt/$id/',
+    path: '/projekt/$id/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProjektIdVorschauRoute =
   AuthenticatedProjektIdVorschauRouteImport.update({
-    id: '/vorschau',
-    path: '/vorschau',
-    getParentRoute: () => AuthenticatedProjektIdRoute,
+    id: '/projekt/$id/vorschau',
+    path: '/projekt/$id/vorschau',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedProjektIdRaumNeuRoute =
   AuthenticatedProjektIdRaumNeuRouteImport.update({
-    id: '/raum/neu',
-    path: '/raum/neu',
-    getParentRoute: () => AuthenticatedProjektIdRoute,
+    id: '/projekt/$id/raum/neu',
+    path: '/projekt/$id/raum/neu',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedProjektIdRaumRaumIdRoute =
   AuthenticatedProjektIdRaumRaumIdRouteImport.update({
-    id: '/raum/$raumId',
-    path: '/raum/$raumId',
-    getParentRoute: () => AuthenticatedProjektIdRoute,
+    id: '/projekt/$id/raum/$raumId',
+    path: '/projekt/$id/raum/$raumId',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/sync': typeof AuthenticatedSyncRoute
-  '/projekt/$id': typeof AuthenticatedProjektIdRouteWithChildren
   '/projekte/neu': typeof AuthenticatedProjekteNeuRoute
   '/projekte/': typeof AuthenticatedProjekteIndexRoute
   '/projekt/$id/vorschau': typeof AuthenticatedProjektIdVorschauRoute
+  '/projekt/$id/': typeof AuthenticatedProjektIdIndexRoute
   '/projekt/$id/raum/$raumId': typeof AuthenticatedProjektIdRaumRaumIdRoute
   '/projekt/$id/raum/neu': typeof AuthenticatedProjektIdRaumNeuRoute
 }
@@ -90,10 +91,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/sync': typeof AuthenticatedSyncRoute
-  '/projekt/$id': typeof AuthenticatedProjektIdRouteWithChildren
   '/projekte/neu': typeof AuthenticatedProjekteNeuRoute
   '/projekte': typeof AuthenticatedProjekteIndexRoute
   '/projekt/$id/vorschau': typeof AuthenticatedProjektIdVorschauRoute
+  '/projekt/$id': typeof AuthenticatedProjektIdIndexRoute
   '/projekt/$id/raum/$raumId': typeof AuthenticatedProjektIdRaumRaumIdRoute
   '/projekt/$id/raum/neu': typeof AuthenticatedProjektIdRaumNeuRoute
 }
@@ -103,10 +104,10 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/sync': typeof AuthenticatedSyncRoute
-  '/_authenticated/projekt/$id': typeof AuthenticatedProjektIdRouteWithChildren
   '/_authenticated/projekte/neu': typeof AuthenticatedProjekteNeuRoute
   '/_authenticated/projekte/': typeof AuthenticatedProjekteIndexRoute
   '/_authenticated/projekt/$id/vorschau': typeof AuthenticatedProjektIdVorschauRoute
+  '/_authenticated/projekt/$id/': typeof AuthenticatedProjektIdIndexRoute
   '/_authenticated/projekt/$id/raum/$raumId': typeof AuthenticatedProjektIdRaumRaumIdRoute
   '/_authenticated/projekt/$id/raum/neu': typeof AuthenticatedProjektIdRaumNeuRoute
 }
@@ -116,10 +117,10 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/sync'
-    | '/projekt/$id'
     | '/projekte/neu'
     | '/projekte/'
     | '/projekt/$id/vorschau'
+    | '/projekt/$id/'
     | '/projekt/$id/raum/$raumId'
     | '/projekt/$id/raum/neu'
   fileRoutesByTo: FileRoutesByTo
@@ -127,10 +128,10 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/sync'
-    | '/projekt/$id'
     | '/projekte/neu'
     | '/projekte'
     | '/projekt/$id/vorschau'
+    | '/projekt/$id'
     | '/projekt/$id/raum/$raumId'
     | '/projekt/$id/raum/neu'
   id:
@@ -139,10 +140,10 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/sync'
-    | '/_authenticated/projekt/$id'
     | '/_authenticated/projekte/neu'
     | '/_authenticated/projekte/'
     | '/_authenticated/projekt/$id/vorschau'
+    | '/_authenticated/projekt/$id/'
     | '/_authenticated/projekt/$id/raum/$raumId'
     | '/_authenticated/projekt/$id/raum/neu'
   fileRoutesById: FileRoutesById
@@ -197,68 +198,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjekteNeuRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/projekt/$id': {
-      id: '/_authenticated/projekt/$id'
+    '/_authenticated/projekt/$id/': {
+      id: '/_authenticated/projekt/$id/'
       path: '/projekt/$id'
-      fullPath: '/projekt/$id'
-      preLoaderRoute: typeof AuthenticatedProjektIdRouteImport
+      fullPath: '/projekt/$id/'
+      preLoaderRoute: typeof AuthenticatedProjektIdIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/projekt/$id/vorschau': {
       id: '/_authenticated/projekt/$id/vorschau'
-      path: '/vorschau'
+      path: '/projekt/$id/vorschau'
       fullPath: '/projekt/$id/vorschau'
       preLoaderRoute: typeof AuthenticatedProjektIdVorschauRouteImport
-      parentRoute: typeof AuthenticatedProjektIdRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/projekt/$id/raum/neu': {
       id: '/_authenticated/projekt/$id/raum/neu'
-      path: '/raum/neu'
+      path: '/projekt/$id/raum/neu'
       fullPath: '/projekt/$id/raum/neu'
       preLoaderRoute: typeof AuthenticatedProjektIdRaumNeuRouteImport
-      parentRoute: typeof AuthenticatedProjektIdRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/projekt/$id/raum/$raumId': {
       id: '/_authenticated/projekt/$id/raum/$raumId'
-      path: '/raum/$raumId'
+      path: '/projekt/$id/raum/$raumId'
       fullPath: '/projekt/$id/raum/$raumId'
       preLoaderRoute: typeof AuthenticatedProjektIdRaumRaumIdRouteImport
-      parentRoute: typeof AuthenticatedProjektIdRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
-interface AuthenticatedProjektIdRouteChildren {
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedSyncRoute: typeof AuthenticatedSyncRoute
+  AuthenticatedProjekteNeuRoute: typeof AuthenticatedProjekteNeuRoute
+  AuthenticatedProjekteIndexRoute: typeof AuthenticatedProjekteIndexRoute
   AuthenticatedProjektIdVorschauRoute: typeof AuthenticatedProjektIdVorschauRoute
+  AuthenticatedProjektIdIndexRoute: typeof AuthenticatedProjektIdIndexRoute
   AuthenticatedProjektIdRaumRaumIdRoute: typeof AuthenticatedProjektIdRaumRaumIdRoute
   AuthenticatedProjektIdRaumNeuRoute: typeof AuthenticatedProjektIdRaumNeuRoute
 }
 
-const AuthenticatedProjektIdRouteChildren: AuthenticatedProjektIdRouteChildren =
-  {
-    AuthenticatedProjektIdVorschauRoute: AuthenticatedProjektIdVorschauRoute,
-    AuthenticatedProjektIdRaumRaumIdRoute:
-      AuthenticatedProjektIdRaumRaumIdRoute,
-    AuthenticatedProjektIdRaumNeuRoute: AuthenticatedProjektIdRaumNeuRoute,
-  }
-
-const AuthenticatedProjektIdRouteWithChildren =
-  AuthenticatedProjektIdRoute._addFileChildren(
-    AuthenticatedProjektIdRouteChildren,
-  )
-
-interface AuthenticatedRouteRouteChildren {
-  AuthenticatedSyncRoute: typeof AuthenticatedSyncRoute
-  AuthenticatedProjektIdRoute: typeof AuthenticatedProjektIdRouteWithChildren
-  AuthenticatedProjekteNeuRoute: typeof AuthenticatedProjekteNeuRoute
-  AuthenticatedProjekteIndexRoute: typeof AuthenticatedProjekteIndexRoute
-}
-
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSyncRoute: AuthenticatedSyncRoute,
-  AuthenticatedProjektIdRoute: AuthenticatedProjektIdRouteWithChildren,
   AuthenticatedProjekteNeuRoute: AuthenticatedProjekteNeuRoute,
   AuthenticatedProjekteIndexRoute: AuthenticatedProjekteIndexRoute,
+  AuthenticatedProjektIdVorschauRoute: AuthenticatedProjektIdVorschauRoute,
+  AuthenticatedProjektIdIndexRoute: AuthenticatedProjektIdIndexRoute,
+  AuthenticatedProjektIdRaumRaumIdRoute: AuthenticatedProjektIdRaumRaumIdRoute,
+  AuthenticatedProjektIdRaumNeuRoute: AuthenticatedProjektIdRaumNeuRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
