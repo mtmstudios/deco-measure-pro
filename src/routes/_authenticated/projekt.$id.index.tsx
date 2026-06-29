@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Copy, Plus, Check, Pencil, X, Eye, Send } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/projekt/$id")({
+export const Route = createFileRoute("/_authenticated/projekt/$id/")({
   head: () => ({ meta: [{ title: "Projekt – Aufmaß-App" }] }),
   component: ProjektDetail,
 });
