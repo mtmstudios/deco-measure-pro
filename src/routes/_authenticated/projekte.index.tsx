@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FolderOpen, Plus, LogOut, ChevronRight, Home } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/projekte")({
+export const Route = createFileRoute("/_authenticated/projekte/")({
   head: () => ({ meta: [{ title: "Projekte – Aufmaß-App" }] }),
   component: ProjekteListe,
 });
