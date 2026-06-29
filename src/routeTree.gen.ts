@@ -17,6 +17,7 @@ import { Route as AuthenticatedProjekteRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedProjekteNeuRouteImport } from './routes/_authenticated/projekte.neu'
 import { Route as AuthenticatedProjektIdRouteImport } from './routes/_authenticated/projekt.$id'
 import { Route as AuthenticatedProjektIdRaumNeuRouteImport } from './routes/_authenticated/projekt.$id.raum.neu'
+import { Route as AuthenticatedProjektIdRaumRaumIdRouteImport } from './routes/_authenticated/projekt.$id.raum.$raumId'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -59,6 +60,12 @@ const AuthenticatedProjektIdRaumNeuRoute =
     path: '/raum/neu',
     getParentRoute: () => AuthenticatedProjektIdRoute,
   } as any)
+const AuthenticatedProjektIdRaumRaumIdRoute =
+  AuthenticatedProjektIdRaumRaumIdRouteImport.update({
+    id: '/raum/$raumId',
+    path: '/raum/$raumId',
+    getParentRoute: () => AuthenticatedProjektIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/sync': typeof AuthenticatedSyncRoute
   '/projekt/$id': typeof AuthenticatedProjektIdRouteWithChildren
   '/projekte/neu': typeof AuthenticatedProjekteNeuRoute
+  '/projekt/$id/raum/$raumId': typeof AuthenticatedProjektIdRaumRaumIdRoute
   '/projekt/$id/raum/neu': typeof AuthenticatedProjektIdRaumNeuRoute
 }
 export interface FileRoutesByTo {
@@ -76,6 +84,7 @@ export interface FileRoutesByTo {
   '/sync': typeof AuthenticatedSyncRoute
   '/projekt/$id': typeof AuthenticatedProjektIdRouteWithChildren
   '/projekte/neu': typeof AuthenticatedProjekteNeuRoute
+  '/projekt/$id/raum/$raumId': typeof AuthenticatedProjektIdRaumRaumIdRoute
   '/projekt/$id/raum/neu': typeof AuthenticatedProjektIdRaumNeuRoute
 }
 export interface FileRoutesById {
@@ -87,6 +96,7 @@ export interface FileRoutesById {
   '/_authenticated/sync': typeof AuthenticatedSyncRoute
   '/_authenticated/projekt/$id': typeof AuthenticatedProjektIdRouteWithChildren
   '/_authenticated/projekte/neu': typeof AuthenticatedProjekteNeuRoute
+  '/_authenticated/projekt/$id/raum/$raumId': typeof AuthenticatedProjektIdRaumRaumIdRoute
   '/_authenticated/projekt/$id/raum/neu': typeof AuthenticatedProjektIdRaumNeuRoute
 }
 export interface FileRouteTypes {
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/sync'
     | '/projekt/$id'
     | '/projekte/neu'
+    | '/projekt/$id/raum/$raumId'
     | '/projekt/$id/raum/neu'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/sync'
     | '/projekt/$id'
     | '/projekte/neu'
+    | '/projekt/$id/raum/$raumId'
     | '/projekt/$id/raum/neu'
   id:
     | '__root__'
@@ -117,6 +129,7 @@ export interface FileRouteTypes {
     | '/_authenticated/sync'
     | '/_authenticated/projekt/$id'
     | '/_authenticated/projekte/neu'
+    | '/_authenticated/projekt/$id/raum/$raumId'
     | '/_authenticated/projekt/$id/raum/neu'
   fileRoutesById: FileRoutesById
 }
@@ -184,6 +197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjektIdRaumNeuRouteImport
       parentRoute: typeof AuthenticatedProjektIdRoute
     }
+    '/_authenticated/projekt/$id/raum/$raumId': {
+      id: '/_authenticated/projekt/$id/raum/$raumId'
+      path: '/raum/$raumId'
+      fullPath: '/projekt/$id/raum/$raumId'
+      preLoaderRoute: typeof AuthenticatedProjektIdRaumRaumIdRouteImport
+      parentRoute: typeof AuthenticatedProjektIdRoute
+    }
   }
 }
 
@@ -201,11 +221,14 @@ const AuthenticatedProjekteRouteWithChildren =
   )
 
 interface AuthenticatedProjektIdRouteChildren {
+  AuthenticatedProjektIdRaumRaumIdRoute: typeof AuthenticatedProjektIdRaumRaumIdRoute
   AuthenticatedProjektIdRaumNeuRoute: typeof AuthenticatedProjektIdRaumNeuRoute
 }
 
 const AuthenticatedProjektIdRouteChildren: AuthenticatedProjektIdRouteChildren =
   {
+    AuthenticatedProjektIdRaumRaumIdRoute:
+      AuthenticatedProjektIdRaumRaumIdRoute,
     AuthenticatedProjektIdRaumNeuRoute: AuthenticatedProjektIdRaumNeuRoute,
   }
 
