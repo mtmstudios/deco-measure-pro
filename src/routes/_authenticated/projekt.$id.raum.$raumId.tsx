@@ -800,25 +800,41 @@ function AcrylRow({ row, onChange }: { row: any; onChange: () => void }) {
 }
 
 /* ---------- STEP 6: Prüfung ---------- */
-type Pruefung = {
-  raum: { name: string; L: number; B: number; H: number; bodenFlaeche: number; deckenFlaeche: number; wandFlaeche: number };
-  positionen: { code: string; bezeichnung: string; einheit: string; menge: number; formel: string }[];
-  befunde: { stufe: "blocker" | "warnung"; meldung: string }[];
+type EngineAntwort = {
+  uebergabe: {
+    schema_version: string;
+    positionen: {
+      leistungs_code: string;
+      name: string;
+      einheit: string;
+      zeilen: { raum: string; formel: string; ergebnis: number }[];
+      endsumme: number;
+    }[];
+    kennzahlen?: { raum: string; L: number; B: number; H: number; boden_m2: number; decke_m2: number; wand_m2: number }[];
+  };
+  befunde: { schwere: "block" | "warnung"; code: string; raum?: string; message: string }[];
+  blocker: boolean;
 };
 
 function Step6({ raumId, projektId }: { raumId: string; projektId: string }) {
   const navigate = useNavigate();
-  const { data, isFetching, refetch, error } = useQuery<Pruefung>({
+  const { data, isFetching, refetch, error } = useQuery<EngineAntwort>({
     queryKey: ["pruefung", raumId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("generate-positionen", { body: { raum_id: raumId } });
+      const { buildEngineProjektFromRaum } = await import("@/lib/build-engine-projekt");
+      const engine = await buildEngineProjektFromRaum(raumId);
+      const { data, error } = await supabase.functions.invoke("generate-positionen", {
+        body: { projekt: engine },
+      });
       if (error) throw error;
-      return data as Pruefung;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return data as EngineAntwort;
     },
   });
 
-  const blockers = data?.befunde.filter((b) => b.stufe === "blocker") ?? [];
-  const warnungen = data?.befunde.filter((b) => b.stufe === "warnung") ?? [];
+  const blockers = data?.befunde.filter((b) => b.schwere === "block") ?? [];
+  const warnungen = data?.befunde.filter((b) => b.schwere === "warnung") ?? [];
+  const kz = data?.uebergabe.kennzahlen?.[0];
 
   return (
     <div className="space-y-4">
@@ -832,36 +848,45 @@ function Step6({ raumId, projektId }: { raumId: string; projektId: string }) {
 
       {data && (
         <>
-          <div className="rounded-lg border-2 border-input p-3 bg-muted/30 text-sm">
-            <div className="flex justify-between"><span>Boden</span><b>{data.raum.bodenFlaeche.toFixed(2)} m²</b></div>
-            <div className="flex justify-between"><span>Decke</span><b>{data.raum.deckenFlaeche.toFixed(2)} m²</b></div>
-            <div className="flex justify-between"><span>Wand (netto)</span><b>{data.raum.wandFlaeche.toFixed(2)} m²</b></div>
-          </div>
+          {kz && (
+            <div className="rounded-lg border-2 border-input p-3 bg-muted/30 text-sm">
+              <div className="flex justify-between"><span>Boden</span><b>{kz.boden_m2.toFixed(2)} m²</b></div>
+              <div className="flex justify-between"><span>Decke</span><b>{kz.decke_m2.toFixed(2)} m²</b></div>
+              <div className="flex justify-between"><span>Wand (netto)</span><b>{kz.wand_m2.toFixed(2)} m²</b></div>
+            </div>
+          )}
 
           {blockers.map((b, i) => (
             <div key={i} className="flex gap-2 p-3 rounded-lg bg-destructive/10 border-2 border-destructive text-destructive">
               <AlertOctagon className="size-5 shrink-0 mt-0.5" />
-              <span className="text-sm font-semibold">{b.meldung}</span>
+              <span className="text-sm font-semibold">{b.message}</span>
             </div>
           ))}
           {warnungen.map((b, i) => (
             <div key={i} className="flex gap-2 p-3 rounded-lg bg-warning/10 border-2 border-warning text-warning-foreground">
               <AlertTriangle className="size-5 shrink-0 mt-0.5 text-warning" />
-              <span className="text-sm font-semibold">{b.meldung}</span>
+              <span className="text-sm font-semibold">{b.message}</span>
             </div>
           ))}
 
           <div className="space-y-2">
-            {data.positionen.length === 0 && <p className="text-sm text-muted-foreground">Keine Positionen.</p>}
-            {data.positionen.map((p) => (
-              <div key={p.code} className="rounded-lg border-2 border-input p-3 bg-background">
-                <div className="flex justify-between gap-2">
-                  <b className="text-base">{p.bezeichnung}</b>
-                  <span className="text-base font-bold tabular-nums">{p.menge.toFixed(2)} {p.einheit}</span>
+            {data.uebergabe.positionen.length === 0 && (
+              <p className="text-sm text-muted-foreground">Keine Positionen.</p>
+            )}
+            {data.uebergabe.positionen.map((p) => {
+              const zeile = p.zeilen[0];
+              return (
+                <div key={p.leistungs_code} className="rounded-lg border-2 border-input p-3 bg-background">
+                  <div className="flex justify-between gap-2">
+                    <b className="text-base">{p.name}</b>
+                    <span className="text-base font-bold tabular-nums">
+                      {(zeile?.ergebnis ?? 0).toFixed(2)} {p.einheit}
+                    </span>
+                  </div>
+                  {zeile && <p className="text-xs text-muted-foreground mt-1">{zeile.formel}</p>}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">{p.formel}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <Button
