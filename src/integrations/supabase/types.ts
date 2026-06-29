@@ -357,9 +357,11 @@ export type Database = {
       raum: {
         Row: {
           bemerkung: string | null
+          breite_cm: number | null
           created_at: string
           etage: string | null
           id: string
+          laenge_cm: number | null
           name: string
           projekt_id: string
           raumhoehe_cm: number | null
@@ -368,9 +370,11 @@ export type Database = {
         }
         Insert: {
           bemerkung?: string | null
+          breite_cm?: number | null
           created_at?: string
           etage?: string | null
           id?: string
+          laenge_cm?: number | null
           name: string
           projekt_id: string
           raumhoehe_cm?: number | null
@@ -379,9 +383,11 @@ export type Database = {
         }
         Update: {
           bemerkung?: string | null
+          breite_cm?: number | null
           created_at?: string
           etage?: string | null
           id?: string
+          laenge_cm?: number | null
           name?: string
           projekt_id?: string
           raumhoehe_cm?: number | null
@@ -572,6 +578,7 @@ export type Database = {
     }
     Functions: {
       current_betrieb_id: { Args: never; Returns: string }
+      duplicate_raum: { Args: { p_raum_id: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "mitarbeiter"
