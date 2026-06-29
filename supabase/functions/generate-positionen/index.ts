@@ -1,5 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+// Engine: berechnet Leistungspositionen aus einem "Engine-Projekt".
+// Eingabe und Ausgabe entsprechen Anhang A der Spezifikation.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,206 +8,279 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-type Befund = { stufe: "blocker" | "warnung"; meldung: string; raum_id?: string; raum_name?: string };
-type Position = { code: string; bezeichnung: string; einheit: string; menge: number; formel: string };
+const SCHEMA_VERSION = "1.0";
 
-function n(v: any): number {
+type Befund = { schwere: "block" | "warnung"; code: string; raum?: string; message: string };
+
+type EngineRaum = {
+  id?: string;
+  raumname: string;
+  reihenfolge?: number;
+  laenge_cm: number | null;
+  breite_cm: number | null;
+  raumhoehe_cm: number | null;
+  deckentyp?: string | null;
+  teilflaechen?: any[];
+  oeffnungen?: any[];
+  heizkoerper?: any[];
+  acryl?: { laenge_cm: number }[];
+  leistungen?: { leistungs_code: string }[];
+};
+
+type EngineProjekt = {
+  kunde?: string | null;
+  objekt_bezeichnung?: string | null;
+  auftrag_nr?: string | null;
+  gewerk?: string | null;
+  adresse?: string | null;
+  raeume: EngineRaum[];
+};
+
+type Zeile = { raum: string; formel: string; ergebnis: number };
+type Position = {
+  leistungs_code: string;
+  name: string;
+  einheit: string;
+  zeilen: Zeile[];
+  endsumme: number;
+};
+
+const LEISTUNGEN: Record<string, { name: string; einheit: string }> = {
+  VSPACHTEL_Q3: { name: "Vollflächige Spachtelung Q3", einheit: "m2" },
+  GK_DECKE: { name: "Gipskartondecke spachteln", einheit: "m2" },
+  TAPETE_ENTF: { name: "Tapete entfernen", einheit: "m2" },
+  RAUHFASER: { name: "Raufaser tapezieren", einheit: "m2" },
+  TIEFGRUND: { name: "Tiefgrund auftragen", einheit: "m2" },
+  DISP_KL3: { name: "Dispersion Klasse 3", einheit: "m2" },
+  SILIKAT: { name: "Silikatfarbe", einheit: "m2" },
+  ABDECKVLIES: { name: "Abdeckvlies Boden", einheit: "m2" },
+  MALERFOLIE: { name: "Malerfolie", einheit: "m2" },
+  HK_RIPPE_LACK: { name: "Heizkörper Rippe lackieren", einheit: "Stk" },
+  HK_ROHRE_LACK: { name: "Heizungsrohre lackieren", einheit: "m" },
+  ACRYL: { name: "Acryl-Fuge", einheit: "m" },
+  TUEREN_LACK: { name: "Türen lackieren", einheit: "Stk" },
+  TUERRAHMEN_LACK: { name: "Türrahmen lackieren", einheit: "Stk" },
+  SCHIENEN_DEMO: { name: "Schienen demontieren", einheit: "m" },
+  HOLZDECKE_DEMO: { name: "Holzdecke demontieren", einheit: "m2" },
+  PUTZFLAECHE: { name: "Putzfläche", einheit: "m2" },
+};
+
+const num = (v: any) => {
   const x = typeof v === "string" ? parseFloat(v) : v;
   return Number.isFinite(x) ? Number(x) : 0;
-}
+};
+const round2 = (v: number) => Math.round(v * 100) / 100;
+const de2 = (v: number) =>
+  v.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-async function computeRaum(supabase: any, raum: any) {
+function computeRaum(raum: EngineRaum) {
   const befunde: Befund[] = [];
-  const positionen: Position[] = [];
+  const name = raum.raumname || "Raum";
 
-  const [{ data: tfs }, { data: oeff }, { data: hks }, { data: acryl }, { data: rl }] = await Promise.all([
-    supabase.from("raum_teilflaeche").select("*").eq("raum_id", raum.id),
-    supabase.from("oeffnung").select("*").eq("raum_id", raum.id),
-    supabase.from("heizkoerper").select("*").eq("raum_id", raum.id),
-    supabase.from("acryl_position").select("*").eq("raum_id", raum.id),
-    supabase.from("raum_leistung").select("*, leistung_katalog(code,bezeichnung,einheit)").eq("raum_id", raum.id),
-  ]);
-
-  const L = n(raum.laenge_cm) / 100;
-  const B = n(raum.breite_cm) / 100;
-  const H = n(raum.raumhoehe_cm) / 100;
+  const L = num(raum.laenge_cm) / 100;
+  const B = num(raum.breite_cm) / 100;
+  const H = num(raum.raumhoehe_cm) / 100;
 
   if (!L || !B || !H) {
-    befunde.push({ stufe: "blocker", meldung: "Raummaße unvollständig (Länge/Breite/Höhe)", raum_id: raum.id, raum_name: raum.name });
+    befunde.push({
+      schwere: "block",
+      code: "RAUM_MASSE_FEHLEN",
+      raum: name,
+      message: "Raummaße unvollständig (Länge/Breite/Höhe)",
+    });
   }
-  if (H > 0 && H < 2.0) befunde.push({ stufe: "warnung", meldung: `Raumhöhe ungewöhnlich gering: ${H} m`, raum_id: raum.id, raum_name: raum.name });
-  if (H > 4.0) befunde.push({ stufe: "warnung", meldung: `Raumhöhe ungewöhnlich hoch: ${H} m`, raum_id: raum.id, raum_name: raum.name });
+  if (H > 0 && H < 2.0)
+    befunde.push({ schwere: "warnung", code: "HOEHE_GERING", raum: name, message: `Raumhöhe ungewöhnlich gering: ${de2(H)} m` });
+  if (H > 4.0)
+    befunde.push({ schwere: "warnung", code: "HOEHE_HOCH", raum: name, message: `Raumhöhe ungewöhnlich hoch: ${de2(H)} m` });
 
   const bodenFlaeche = L * B;
   let deckenFlaeche = bodenFlaeche;
   let wandFlaeche = 2 * (L + B) * H;
+  let wandAbzug = 0;
 
-  for (const t of tfs ?? []) {
-    const a = (n(t.laenge_cm) * n(t.breite_cm)) / 10000;
-    const wirkt = (t.daten as any)?.wirkt_auf as string | undefined;
+  for (const t of raum.teilflaechen ?? []) {
+    const a = (num(t.laenge_cm) * num(t.breite_cm)) / 10000;
     const sign = t.typ === "abzug" ? -1 : 1;
-    if (wirkt === "decke") deckenFlaeche += sign * a;
-    if (wirkt === "wand") wandFlaeche += sign * a;
+    if (t.wirkt_auf === "decke") deckenFlaeche += sign * a;
+    if (t.wirkt_auf === "wand") wandFlaeche += sign * a;
   }
 
-  for (const o of oeff ?? []) {
-    const d = (o.daten as any) ?? {};
-    const anzahl = n(d.anzahl) || 1;
-    const a = (n(o.breite_cm) * n(o.hoehe_cm)) / 10000 * anzahl;
-    if (d.von_wandflaeche_abziehen !== false) wandFlaeche -= a;
+  for (const o of raum.oeffnungen ?? []) {
+    const anzahl = num(o.anzahl) || 1;
+    const a = (num(o.breite_cm) * num(o.hoehe_cm) * anzahl) / 10000;
+    if (o.von_wandflaeche_abziehen !== false) {
+      wandFlaeche -= a;
+      wandAbzug += a;
+    }
     if (!o.breite_cm || !o.hoehe_cm) {
-      befunde.push({ stufe: "warnung", meldung: `Öffnung "${o.typ}" ohne Maße`, raum_id: raum.id, raum_name: raum.name });
+      befunde.push({
+        schwere: "warnung",
+        code: "OEFFNUNG_OHNE_MASS",
+        raum: name,
+        message: `Öffnung "${o.typ ?? "?"}" ohne Maße`,
+      });
     }
   }
 
   if (wandFlaeche < 0) {
-    befunde.push({ stufe: "blocker", meldung: "Wandfläche negativ – Öffnungen überprüfen", raum_id: raum.id, raum_name: raum.name });
+    befunde.push({
+      schwere: "block",
+      code: "WAND_NEGATIV",
+      raum: name,
+      message: "Wandfläche negativ – Öffnungen überprüfen",
+    });
     wandFlaeche = 0;
   }
 
-  for (const r of rl ?? []) {
-    const code = r.leistung_katalog?.code ?? null;
-    if (!code) continue;
-    const bz = r.bezeichnung || r.leistung_katalog?.bezeichnung || code;
-    const einheit = r.einheit || r.leistung_katalog?.einheit || "m2";
+  const positionen: { code: string; menge: number; formel: string }[] = [];
+  const codes = (raum.leistungen ?? []).map((l) => l.leistungs_code).filter(Boolean);
+
+  for (const code of codes) {
     let menge = 0;
     let formel = "";
-
     switch (code) {
       case "VSPACHTEL_Q3":
       case "TIEFGRUND":
       case "DISP_KL3":
       case "SILIKAT":
         menge = wandFlaeche + deckenFlaeche;
-        formel = `Wandfläche ${wandFlaeche.toFixed(2)} + Deckenfläche ${deckenFlaeche.toFixed(2)}`;
+        formel = `Wandfläche ${de2(wandFlaeche)} + Deckenfläche ${de2(deckenFlaeche)}`;
         break;
       case "GK_DECKE":
         menge = deckenFlaeche;
-        formel = `Decke ${L.toFixed(2)} × ${B.toFixed(2)}`;
+        formel = `Decke ${de2(L)} × ${de2(B)}`;
         break;
       case "TAPETE_ENTF":
       case "RAUHFASER":
         menge = wandFlaeche;
-        formel = `Wand 2×(${L.toFixed(2)}+${B.toFixed(2)})×${H.toFixed(2)} − Öffnungen`;
+        formel =
+          wandAbzug > 0
+            ? `2×(${de2(L)}+${de2(B)})×${de2(H)} − Öffnungen ${de2(wandAbzug)}`
+            : `2×(${de2(L)}+${de2(B)})×${de2(H)}`;
         break;
       case "ABDECKVLIES":
       case "MALERFOLIE":
         menge = bodenFlaeche;
-        formel = `Boden ${L.toFixed(2)} × ${B.toFixed(2)}`;
+        formel = `Boden ${de2(L)} × ${de2(B)}`;
         break;
       case "HK_RIPPE_LACK": {
-        const stk = (hks ?? []).filter((h: any) => (h.daten as any)?.typ === "rippe").length;
+        const stk = (raum.heizkoerper ?? []).filter((h: any) => h.typ === "rippe" && h.lackieren !== false).length;
         menge = stk;
         formel = `${stk} Heizkörper (Rippe)`;
         break;
       }
       case "HK_ROHRE_LACK": {
         let m = 0;
-        for (const h of hks ?? []) {
-          const d = (h.daten as any) ?? {};
-          if (d.typ === "rohr") for (const l of d.rohr_laengen_cm ?? []) m += n(l) / 100;
+        const parts: string[] = [];
+        for (const h of raum.heizkoerper ?? []) {
+          if (h.typ !== "rohr" || h.lackieren === false) continue;
+          for (const l of h.rohr_laengen_cm ?? []) {
+            m += num(l) / 100;
+            parts.push(de2(num(l) / 100));
+          }
         }
         menge = m;
-        formel = `Summe Rohrlängen`;
+        formel = parts.length ? parts.join(" + ") : "Summe Rohrlängen";
         break;
       }
       case "ACRYL": {
         let m = 0;
-        for (const a of acryl ?? []) m += n(a.laenge_m);
+        const parts: string[] = [];
+        for (const a of raum.acryl ?? []) {
+          const v = num(a.laenge_cm) / 100;
+          m += v;
+          parts.push(de2(v));
+        }
         menge = m;
-        formel = `Summe Acryl-Längen`;
+        formel = parts.length ? parts.join(" + ") : "Summe Acryl-Längen";
+        break;
+      }
+      case "TUEREN_LACK":
+      case "TUERRAHMEN_LACK": {
+        const stk = (raum.oeffnungen ?? []).filter((o: any) => o.typ === "tuer" || o.typ === "tuerelement").length;
+        menge = stk;
+        formel = `${stk} Tür(en)`;
         break;
       }
       default:
-        menge = n(r.menge);
+        menge = 0;
         formel = "manuell";
     }
-
-    positionen.push({ code, bezeichnung: bz, einheit, menge: Math.round(menge * 100) / 100, formel });
+    positionen.push({ code, menge: round2(menge), formel });
   }
 
   return {
-    raum: { id: raum.id, name: raum.name, L, B, H, bodenFlaeche, deckenFlaeche, wandFlaeche },
+    name,
+    kennzahlen: {
+      L: round2(L),
+      B: round2(B),
+      H: round2(H),
+      boden_m2: round2(bodenFlaeche),
+      decke_m2: round2(deckenFlaeche),
+      wand_m2: round2(wandFlaeche),
+    },
     positionen,
     befunde,
   };
 }
 
+function computeProjekt(projekt: EngineProjekt) {
+  const gruppen = new Map<string, Position>();
+  const alleBefunde: Befund[] = [];
+  const kennzahlen: any[] = [];
+
+  for (const raum of projekt.raeume ?? []) {
+    const r = computeRaum(raum);
+    alleBefunde.push(...r.befunde);
+    kennzahlen.push({ raum: r.name, ...r.kennzahlen });
+    for (const p of r.positionen) {
+      const meta = LEISTUNGEN[p.code] ?? { name: p.code, einheit: "" };
+      let g = gruppen.get(p.code);
+      if (!g) {
+        g = { leistungs_code: p.code, name: meta.name, einheit: meta.einheit, zeilen: [], endsumme: 0 };
+        gruppen.set(p.code, g);
+      }
+      g.zeilen.push({ raum: r.name, formel: p.formel, ergebnis: p.menge });
+      g.endsumme = round2(g.endsumme + p.menge);
+    }
+  }
+
+  const positionen = Array.from(gruppen.values()).sort((a, b) =>
+    a.name.localeCompare(b.name, "de"),
+  );
+
+  const blocker = alleBefunde.some((b) => b.schwere === "block");
+
+  return {
+    uebergabe: {
+      schema_version: SCHEMA_VERSION,
+      projekt: {
+        kunde: projekt.kunde ?? null,
+        objekt_bezeichnung: projekt.objekt_bezeichnung ?? null,
+        auftrag_nr: projekt.auftrag_nr ?? null,
+        gewerk: projekt.gewerk ?? null,
+      },
+      positionen,
+      kennzahlen,
+    },
+    befunde: alleBefunde,
+    blocker,
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
   try {
     const body = await req.json();
-    const auth = req.headers.get("Authorization") ?? "";
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: auth } } },
-    );
-
-    // Raum-Modus (Wizard Schritt 6)
-    if (body.raum_id) {
-      const { data: raum, error } = await supabase.from("raum").select("*").eq("id", body.raum_id).single();
-      if (error || !raum) throw new Error("Raum nicht gefunden");
-      const result = await computeRaum(supabase, raum);
-      return new Response(JSON.stringify(result), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const projekt: EngineProjekt | undefined = body?.projekt;
+    if (!projekt || !Array.isArray(projekt.raeume)) {
+      throw new Error("projekt.raeume erforderlich (Engine-Form)");
     }
-
-    // Projekt-Modus (Vorschau)
-    const projektInput = body.projekt;
-    const projektId = projektInput?.id ?? body.projekt_id;
-    if (!projektId) throw new Error("projekt.id oder raum_id erforderlich");
-
-    const { data: projekt, error: pErr } = await supabase
-      .from("projekt").select("*").eq("id", projektId).single();
-    if (pErr || !projekt) throw new Error("Projekt nicht gefunden");
-
-    const { data: raeume } = await supabase
-      .from("raum").select("*").eq("projekt_id", projektId).order("reihenfolge", { ascending: true });
-
-    const alleBefunde: Befund[] = [];
-    // gruppieren nach code
-    const gruppen = new Map<string, {
-      code: string;
-      bezeichnung: string;
-      einheit: string;
-      raeume: { raum_id: string; raum_name: string; formel: string; ergebnis: number }[];
-      endsumme: number;
-    }>();
-
-    for (const raum of raeume ?? []) {
-      const r = await computeRaum(supabase, raum);
-      alleBefunde.push(...r.befunde);
-      for (const p of r.positionen) {
-        let g = gruppen.get(p.code);
-        if (!g) {
-          g = { code: p.code, bezeichnung: p.bezeichnung, einheit: p.einheit, raeume: [], endsumme: 0 };
-          gruppen.set(p.code, g);
-        }
-        g.raeume.push({ raum_id: raum.id, raum_name: raum.name, formel: p.formel, ergebnis: p.menge });
-        g.endsumme = Math.round((g.endsumme + p.menge) * 100) / 100;
-      }
-    }
-
-    const positionen = Array.from(gruppen.values()).sort((a, b) => a.bezeichnung.localeCompare(b.bezeichnung, "de"));
-    const blocker = alleBefunde.filter((b) => b.stufe === "blocker");
-    const warnungen = alleBefunde.filter((b) => b.stufe === "warnung");
-
-    return new Response(
-      JSON.stringify({
-        uebergabe: {
-          projekt_id: projektId,
-          projekt: { kunde: projekt.kunde, objekt_bezeichnung: projekt.objekt_bezeichnung, auftrag_nr: projekt.auftrag_nr },
-          positionen,
-        },
-        befunde: alleBefunde,
-        blocker,
-        warnungen,
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    const result = computeProjekt(projekt);
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (e) {
     return new Response(JSON.stringify({ error: (e as Error).message }), {
       status: 400,
