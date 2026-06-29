@@ -147,7 +147,7 @@ function NeuerAuftrag() {
           </div>
         </div>
 
-        <div className="fixed left-0 right-0 bottom-16 px-5 py-3 bg-background border-t safe-bottom">
+        <div className="fixed left-0 right-0 bottom-16 px-5 py-3 bg-background border-t">
           <Button
             type="submit"
             disabled={mutation.isPending}
