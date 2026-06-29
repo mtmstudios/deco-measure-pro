@@ -33,7 +33,7 @@ const STATUS_LABEL: Record<ProjektStatus, string> = {
 const STATUS_CLASS: Record<ProjektStatus, string> = {
   erfassung: "bg-muted text-foreground",
   geprueft: "bg-primary text-primary-foreground",
-  uebergeben: "bg-[hsl(var(--success))] text-white",
+  uebergeben: "bg-success text-success-foreground",
   fehler: "bg-destructive text-destructive-foreground",
 };
 
