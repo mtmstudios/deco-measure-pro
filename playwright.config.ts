@@ -20,8 +20,14 @@ export default defineConfig({
   },
   projects: [
     {
-      name: "mobile-iphone13",
-      use: { ...devices["iPhone 13"] },
+      name: "mobile-chromium",
+      use: {
+        ...devices["Pixel 7"], // Chromium-basiert, ähnliche Mobile-Metrik
+        viewport: { width: 390, height: 844 },
+        deviceScaleFactor: 2,
+        isMobile: true,
+        hasTouch: true,
+      },
     },
   ],
 });
