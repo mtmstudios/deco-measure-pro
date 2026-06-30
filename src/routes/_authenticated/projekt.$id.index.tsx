@@ -316,6 +316,36 @@ function ProjektDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Löschen-Bestätigung */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent className="rounded-none border-[var(--color-hairline)] bg-[var(--color-paper)]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-serif text-[20px] font-medium">
+              Raum löschen?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              {deleteTarget
+                ? `Raum „${deleteTarget.name}" wird mit allen erfassten Maßen, Öffnungen und Leistungen unwiderruflich gelöscht.`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="min-h-[44px] rounded-none border border-[var(--color-brand)] text-[var(--color-brand)] bg-transparent uppercase tracking-[0.14em] text-[12px] mt-0">
+              Abbrechen
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="min-h-[44px] rounded-none bg-[#B5563F] hover:bg-[#9C4733] text-[var(--color-paper)] uppercase tracking-[0.14em] text-[12px]"
+              onClick={() => {
+                if (deleteTarget) remove.mutate(deleteTarget.id);
+                setDeleteTarget(null);
+              }}
+            >
+              Löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
