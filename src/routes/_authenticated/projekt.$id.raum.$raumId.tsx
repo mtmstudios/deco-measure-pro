@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { NumberInput } from "@/components/number-input";
 import { cn } from "@/lib/utils";
 import { setRaumLeistung, type RaumLeistungRow } from "@/lib/raum-leistung";
+import { RaumGrundrissCard } from "@/components/raum-grundriss";
 
 export const Route = createFileRoute("/_authenticated/projekt/$id/raum/$raumId")({
   head: () => ({ meta: [{ title: "Raum erfassen" }] }),
@@ -839,6 +840,7 @@ function Step6({ raumId, projektId }: { raumId: string; projektId: string }) {
   return (
     <div className="space-y-4">
       <SectionTitle>Prüfung & Abschluss</SectionTitle>
+      <RaumGrundrissCard raumId={raumId} />
       <Button variant="outline" className="h-12 w-full" onClick={() => refetch()}>
         Neu berechnen
       </Button>

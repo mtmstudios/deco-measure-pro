@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { buildEngineProjekt } from "@/lib/build-engine-projekt";
+import { buildGeoProjekt } from "@/lib/build-geo-projekt";
+import { generateAufmassZeilen, zeilenToXlsx } from "@/lib/raumlevel-export";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -11,6 +13,7 @@ import {
   ChevronDown,
   ChevronRight,
   FileDown,
+  FileSpreadsheet,
   Send,
   Loader2,
 } from "lucide-react";
@@ -246,6 +249,34 @@ function FooterActions({
     URL.revokeObjectURL(url);
   };
 
+  const [xlsxBusy, setXlsxBusy] = useState(false);
+  const exportRaumlevelXlsx = async () => {
+    try {
+      setXlsxBusy(true);
+      const geo = await buildGeoProjekt(projektId);
+      const zeilen = generateAufmassZeilen(geo);
+      if (zeilen.length === 0) {
+        toast.error("Keine Räume mit vollständigen Maßen erfasst.");
+        return;
+      }
+      const bytes = zeilenToXlsx(zeilen);
+      const blob = new Blob([bytes as unknown as BlobPart], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `raumlevel-${antwort.uebergabe.projekt.auftrag_nr ?? projektId}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`Raumlevel-Export erstellt (${zeilen.length} Zeilen).`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Raumlevel-Export fehlgeschlagen");
+    } finally {
+      setXlsxBusy(false);
+    }
+  };
+
   const uebergeben = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("uebergabe").insert({
@@ -260,12 +291,22 @@ function FooterActions({
   });
 
   return (
-    <div className="fixed bottom-16 left-0 right-0 z-10 border-t bg-background px-3 py-3 flex gap-2 safe-area-inset-bottom">
-      <Button variant="outline" className="h-14 flex-1 text-base font-bold" onClick={exportCsv}>
-        <FileDown className="size-5 mr-1" /> Export
-      </Button>
+    <div className="fixed bottom-16 left-0 right-0 z-10 border-t bg-background px-3 py-3 flex flex-col gap-2 safe-area-inset-bottom">
+      <div className="flex gap-2">
+        <Button variant="outline" className="h-12 flex-1 text-sm font-bold" onClick={exportCsv}>
+          <FileDown className="size-5 mr-1" /> CSV
+        </Button>
+        <Button
+          variant="outline"
+          className="h-12 flex-1 text-sm font-bold"
+          onClick={exportRaumlevelXlsx}
+          disabled={xlsxBusy}
+        >
+          <FileSpreadsheet className="size-5 mr-1" /> {xlsxBusy ? "…" : "Excel (Raumlevel)"}
+        </Button>
+      </div>
       <Button
-        className="h-14 flex-1 text-base font-bold"
+        className="h-14 w-full text-base font-bold"
         disabled={hasBlocker || uebergeben.isPending}
         onClick={() => uebergeben.mutate()}
         title={hasBlocker ? "Blocker müssen behoben werden" : undefined}
