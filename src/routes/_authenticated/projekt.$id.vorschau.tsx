@@ -92,49 +92,51 @@ function Vorschau() {
     : undefined;
 
   return (
-    <div className="pb-40 myr-rise">
-      <ScreenHeader
-        backTo="/projekt/$id"
-        backParams={{ id }}
-        right={
-          isFetching ? (
-            <Loader2 className="size-4 animate-spin text-[var(--color-stone-muted)]" />
-          ) : undefined
-        }
-      />
+    <>
+      <div className="myr-rise pb-[260px]">
+        <ScreenHeader
+          backTo="/projekt/$id"
+          backParams={{ id }}
+          right={
+            isFetching ? (
+              <Loader2 className="size-4 animate-spin text-[var(--color-stone-muted)]" />
+            ) : undefined
+          }
+        />
 
-      <div className="mx-auto max-w-[960px] px-4 md:px-6 lg:px-8 pt-2 space-y-6">
-        <BrandingKopf projekt={projekt} />
+        <div className="mx-auto max-w-[960px] px-4 md:px-6 lg:px-8 pt-2 space-y-6">
+          <BrandingKopf projekt={projekt} />
 
-        <h1 className="font-serif text-[26px] md:text-[30px] leading-tight font-medium">
-          Vorschau
-        </h1>
+          <h1 className="font-serif text-[26px] md:text-[30px] leading-tight font-medium">
+            Vorschau
+          </h1>
 
-        {isLoading ? (
-          <div className="text-center py-12 text-[var(--color-stone-muted)]">
-            Berechne Positionen…
-          </div>
-        ) : error ? (
-          <div className="myr-card p-5 space-y-3">
-            <p className="font-serif text-[18px] text-[var(--color-danger)]">
-              Fehler bei der Berechnung
-            </p>
-            <p className="text-[14px] text-[var(--color-stone-muted)]">
-              {(error as Error).message}
-            </p>
-            <Button
-              className="min-h-[44px] rounded-none bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)] text-[var(--color-paper)] uppercase tracking-[0.14em] text-[12px]"
-              onClick={() => refetch()}
-            >
-              Erneut versuchen
-            </Button>
-          </div>
-        ) : data ? (
-          <>
-            <BefundLeiste blocker={blocker} warnungen={warnungen} />
-            <PositionenListe positionen={data.uebergabe.positionen} />
-          </>
-        ) : null}
+          {isLoading ? (
+            <div className="text-center py-12 text-[var(--color-stone-muted)]">
+              Berechne Positionen…
+            </div>
+          ) : error ? (
+            <div className="myr-card p-5 space-y-3">
+              <p className="font-serif text-[18px] text-[var(--color-danger)]">
+                Fehler bei der Berechnung
+              </p>
+              <p className="text-[14px] text-[var(--color-stone-muted)]">
+                {(error as Error).message}
+              </p>
+              <Button
+                className="min-h-[44px] rounded-none bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)] text-[var(--color-paper)] uppercase tracking-[0.14em] text-[12px]"
+                onClick={() => refetch()}
+              >
+                Erneut versuchen
+              </Button>
+            </div>
+          ) : data ? (
+            <>
+              <BefundLeiste blocker={blocker} warnungen={warnungen} />
+              <PositionenListe positionen={data.uebergabe.positionen} />
+            </>
+          ) : null}
+        </div>
       </div>
 
       {data && projekt && (
@@ -145,7 +147,7 @@ function Vorschau() {
           hasBlocker={data.blocker}
         />
       )}
-    </div>
+    </>
   );
 }
 
