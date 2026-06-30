@@ -493,6 +493,11 @@ function RaumKarte({
   const maße = [raum.laenge_cm, raum.breite_cm, raum.raumhoehe_cm];
   const maßeText = erfasst ? `${maße[0]} × ${maße[1]} × ${maße[2]} cm` : null;
 
+  const statusLabel = erfasst
+    ? `Erfasst, Maße ${maße[0]} × ${maße[1]} × ${maße[2]} Zentimeter`
+    : "Maße fehlen";
+  const ariaLabel = `Raum ${raum.name}${raum.etage ? `, ${raum.etage}` : ""}, ${statusLabel}. Öffnen.`;
+
   return (
     <div
       role="button"
@@ -504,21 +509,24 @@ function RaumKarte({
           onOpen();
         }
       }}
-      className="myr-card group relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-5 cursor-pointer hover:bg-[var(--color-sand-deep)] active:bg-[var(--color-sand-deep)] transition-colors duration-300"
+      aria-label={ariaLabel}
+      className="myr-card group relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-5 cursor-pointer hover:bg-[var(--color-sand-deep)] active:bg-[var(--color-sand-deep)] transition-colors duration-300 focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-paper)]"
       style={{ transitionTimingFunction: "cubic-bezier(0.16,1,0.3,1)" }}
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2 mb-1.5">
           {erfasst ? (
             <span
-              aria-label="Erfasst"
+              role="img"
+              aria-label="Status: erfasst"
               className="size-5 rounded-full bg-[var(--color-brand)] text-[var(--color-paper)] flex items-center justify-center shrink-0"
             >
-              <Check className="size-3" strokeWidth={3} />
+              <Check className="size-3" strokeWidth={3} aria-hidden="true" />
             </span>
           ) : (
             <span
-              aria-label="Offen"
+              role="img"
+              aria-label="Status: offen"
               className="size-5 rounded-full border-[1.5px] border-[var(--color-hairline)] shrink-0"
             />
           )}
@@ -553,16 +561,18 @@ function RaumKarte({
       <div
         className="flex items-center gap-1 shrink-0"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              aria-label="Aktionen"
-              className="size-11 flex items-center justify-center text-[var(--color-stone-muted)] hover:text-[var(--color-ink)] transition-colors"
+              aria-label={`Aktionen für ${raum.name}`}
+              aria-haspopup="menu"
+              className="size-11 flex items-center justify-center text-[var(--color-stone-muted)] hover:text-[var(--color-ink)] transition-colors focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-paper)]"
               onClick={(e) => e.stopPropagation()}
             >
-              <MoreHorizontal className="size-5" strokeWidth={1.75} />
+              <MoreHorizontal className="size-5" strokeWidth={1.75} aria-hidden="true" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
