@@ -83,10 +83,7 @@ function ProjekteListe() {
         }
       />
 
-      <div
-        className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8 pt-4"
-        style={{ paddingBottom: "96px" }}
-      >
+      <div className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8 pt-4 pb-24 md:pb-8">
         {/* Titelblock */}
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 mb-5">
           <div className="min-w-0">
@@ -149,15 +146,13 @@ function ProjekteListe() {
         type="button"
         onClick={() => navigate({ to: "/projekte/neu" })}
         aria-label="Neuer Auftrag"
-        className="md:hidden fixed right-5 z-30 min-h-[52px] pl-5 pr-6 bg-[var(--color-brand)] text-[var(--color-paper)] flex items-center gap-2 uppercase tracking-[0.14em] text-[13px] font-medium active:bg-[var(--color-brand-hover)] shadow-[0_8px_24px_rgba(47,49,43,0.18)] transition-colors duration-300"
+        className="md:hidden fixed right-5 z-30 size-14 bg-[var(--color-brand)] text-[var(--color-paper)] flex items-center justify-center active:bg-[var(--color-brand-hover)] border border-[#DDD7CB] rounded-full motion-safe:transition-colors motion-safe:duration-300"
         style={{
-          borderRadius: 2,
           bottom: "calc(72px + env(safe-area-inset-bottom))",
           transitionTimingFunction: "cubic-bezier(0.16,1,0.3,1)",
         }}
       >
-        <Plus className="size-5" strokeWidth={1.75} />
-        Neuer Auftrag
+        <Plus className="size-6" strokeWidth={1.75} />
       </button>
     </div>
   );
