@@ -83,10 +83,7 @@ function ProjekteListe() {
         }
       />
 
-      <div
-        className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8 pt-4"
-        style={{ paddingBottom: "96px" }}
-      >
+      <div className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8 pt-4 pb-24 md:pb-8">
         {/* Titelblock */}
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 mb-5">
           <div className="min-w-0">
