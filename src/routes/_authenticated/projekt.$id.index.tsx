@@ -36,6 +36,7 @@ import {
   Eye,
   MoreHorizontal,
   ChevronRight,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ScreenHeader } from "@/components/screen-header";
@@ -55,6 +56,7 @@ type Projekt = {
   sachbearbeiter: string | null;
   gewerk: string | null;
   status: string;
+  uebergeben_at?: string | null;
 };
 
 type Raum = {
@@ -235,6 +237,20 @@ function ProjektDetail() {
   const [renameTarget, setRenameTarget] = useState<Raum | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Raum | null>(null);
+  const [deleteProjektOpen, setDeleteProjektOpen] = useState(false);
+
+  const deleteProjekt = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("projekt" as never).delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["projekte"] });
+      toast.success("Projekt gelöscht");
+      navigate({ to: "/projekte" });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   function openRename(r: Raum) {
     setRenameTarget(r);
@@ -266,7 +282,13 @@ function ProjektDetail() {
           <p className="text-base text-destructive">{(projektQ.error as Error).message}</p>
         )}
 
-        {projekt && <KopfDaten projekt={projekt} />}
+        {projekt && projekt.status === "uebergeben" && (
+          <UebergabeHinweis at={projekt.uebergeben_at ?? null} />
+        )}
+
+        {projekt && (
+          <KopfDaten projekt={projekt} onDelete={() => setDeleteProjektOpen(true)} />
+        )}
 
         <section>
           <div className="flex items-baseline justify-between mb-2">
@@ -409,11 +431,67 @@ function ProjektDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Projekt-Löschen-Bestätigung */}
+      <AlertDialog open={deleteProjektOpen} onOpenChange={setDeleteProjektOpen}>
+        <AlertDialogContent className="rounded-none border-[var(--color-hairline)] bg-[var(--color-sand-deep)]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-serif text-[20px] font-medium">
+              Projekt wirklich löschen?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-[15px] text-[var(--color-stone-muted)]">
+              {projekt
+                ? `„${projekt.objekt_bezeichnung}" wird mit allen Räumen und Daten entfernt. Das kann nicht rückgängig gemacht werden.`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="min-h-[48px] rounded-none border border-[var(--color-hairline)] bg-transparent text-[var(--color-ink)] hover:bg-[var(--color-paper)] uppercase tracking-[0.14em] text-[12px] mt-0">
+              Abbrechen
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="min-h-[48px] rounded-none bg-[var(--color-danger)] hover:bg-[#86493F] text-[var(--color-paper)] uppercase tracking-[0.14em] text-[12px]"
+              onClick={() => deleteProjekt.mutate()}
+            >
+              <Trash2 className="size-4 mr-2" strokeWidth={1.75} /> Löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-function KopfDaten({ projekt }: { projekt: Projekt }) {
+function UebergabeHinweis({ at }: { at: string | null }) {
+  const date = at
+    ? new Date(at).toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+    : null;
+  return (
+    <section
+      className="relative bg-[var(--color-sand-deep)] border border-[var(--color-hairline)] pl-4 pr-4 py-3 flex items-center gap-3"
+      style={{ borderRadius: 2 }}
+    >
+      <span
+        aria-hidden
+        className="absolute left-0 top-0 bottom-0"
+        style={{ width: 3, background: "var(--color-brand)" }}
+      />
+      <Check
+        className="size-4 shrink-0 text-[var(--color-brand)]"
+        strokeWidth={1.75}
+      />
+      <p className="text-[13px] text-[var(--color-stone-muted)]">
+        An Raumlevel übergeben{date ? <> am <span className="num-serif text-[var(--color-ink)]">{date}</span></> : null}
+      </p>
+    </section>
+  );
+}
+
+function KopfDaten({ projekt, onDelete }: { projekt: Projekt; onDelete: () => void }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
@@ -508,6 +586,18 @@ function KopfDaten({ projekt }: { projekt: Projekt }) {
         >
           <Check className="size-4 mr-1" /> {save.isPending ? "…" : "Speichern"}
         </Button>
+      </div>
+
+      <div className="pt-2 mt-2 border-t border-[var(--color-hairline)]">
+        <button
+          type="button"
+          onClick={onDelete}
+          className="w-full min-h-[52px] inline-flex items-center justify-center gap-2 text-[var(--color-danger)] hover:bg-[color-mix(in_oklab,var(--color-danger)_8%,transparent)] uppercase tracking-[0.14em] text-[12px] font-medium transition-colors duration-300"
+          style={{ transitionTimingFunction: "cubic-bezier(0.16,1,0.3,1)" }}
+        >
+          <Trash2 className="size-4" strokeWidth={1.75} />
+          Projekt löschen
+        </button>
       </div>
     </section>
   );
