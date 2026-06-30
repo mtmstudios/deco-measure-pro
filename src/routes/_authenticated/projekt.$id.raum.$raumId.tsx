@@ -92,6 +92,15 @@ function RaumWizard() {
             <h1 className="text-xl font-bold tracking-tight truncate">{raum.name}</h1>
             <p className="text-xs text-muted-foreground">Schritt {step} von 6</p>
           </div>
+          <Button
+            size="lg"
+            className="h-12 px-4 text-sm font-semibold"
+            disabled={step === 6}
+            onClick={() => setStep((s) => Math.min(6, s + 1))}
+          >
+            Weiter
+            <ArrowRight className="size-5 ml-1" />
+          </Button>
         </div>
         <StepIndicator step={step} onJump={setStep} />
       </header>
