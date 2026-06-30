@@ -17,6 +17,10 @@ export default defineConfig({
     baseURL: "http://localhost:8080",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
+    // Sandbox-Browser nutzen, wenn vorhanden; sonst Playwright-Default.
+    launchOptions: process.env.PW_CHROMIUM_PATH
+      ? { executablePath: process.env.PW_CHROMIUM_PATH }
+      : undefined,
   },
   projects: [
     {
