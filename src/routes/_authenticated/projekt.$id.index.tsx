@@ -171,6 +171,7 @@ function ProjektDetail() {
 
   const [renameTarget, setRenameTarget] = useState<Raum | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<Raum | null>(null);
 
   function openRename(r: Raum) {
     setRenameTarget(r);
