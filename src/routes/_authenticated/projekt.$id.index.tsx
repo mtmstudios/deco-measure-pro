@@ -36,6 +36,8 @@ import {
   Eye,
   MoreHorizontal,
   ChevronRight,
+  Trash2,
+  Check as CheckIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ScreenHeader } from "@/components/screen-header";
