@@ -1,11 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { GeoOeffnung, GeoProjekt, GeoRaum } from "./raumlevel-export";
+import type { FlaechenTerm, GeoOeffnung, GeoProjekt, GeoRaum, Massketten } from "./raumlevel-export";
+import type { RaumGeometrie } from "@/components/geometrie-editor";
 
 /**
  * Baut aus den DB-Zeilen das GeoProjekt für den Raumlevel-XLSX-Export.
- * Stand v1: rechteckige Räume (Länge × Breite). Wandabschnitts-/Polygon-Eingabe
- * für komplexe Räume folgt separat. Acrylfuge/Leibung werden aus den Öffnungen
- * abgeleitet (Raumlevel-Konvention), nicht aus acryl_position.
+ * - Geometrie-Modus "masskette" (raum.geometrie) → Wandabschnitte + Boden-Terme.
+ * - sonst Rechteck (Länge × Breite) aus den Raumdaten.
+ * Acrylfuge/Leibung werden aus den Öffnungen abgeleitet (Raumlevel-Konvention).
  */
 export async function buildGeoProjekt(projektId: string): Promise<GeoProjekt> {
   const { data: projekt } = await supabase.from("projekt").select("*").eq("id", projektId).single();
@@ -25,8 +26,24 @@ export async function buildGeoProjekt(projektId: string): Promise<GeoProjekt> {
   }
 
   const geoRaeume: GeoRaum[] = [];
-  for (const r of raeume ?? []) {
-    if (!r.laenge_cm || !r.breite_cm || !r.raumhoehe_cm) continue; // ohne Maße kein Aufmaß
+  for (const r of (raeume ?? []) as any[]) {
+    if (!r.raumhoehe_cm) continue; // ohne Raumhöhe kein Aufmaß
+
+    const g = (r.geometrie ?? null) as RaumGeometrie | null;
+
+    let wand: Massketten;
+    let boden: FlaechenTerm[] | undefined;
+    if (g?.modus === "masskette" && g.wand_abschnitte_cm && g.wand_abschnitte_cm.length > 0) {
+      wand = { abschnitte_m: g.wand_abschnitte_cm.map((cm) => cm / 100) };
+      boden =
+        g.boden_terme && g.boden_terme.length > 0
+          ? g.boden_terme.map((t) => ({ laenge_m: t.laenge_cm / 100, breite_m: t.breite_cm / 100, dreieck: t.dreieck }))
+          : undefined;
+    } else {
+      if (!r.laenge_cm || !r.breite_cm) continue; // Rechteck-Modus braucht Länge × Breite
+      wand = { rechteck: { laenge_m: r.laenge_cm / 100, breite_m: r.breite_cm / 100 } };
+      boden = undefined; // wird aus dem Rechteck abgeleitet
+    }
 
     const oe = oeffnungen.filter((o) => o.raum_id === r.id);
     const geoOeffnungen: GeoOeffnung[] = [];
@@ -38,7 +55,6 @@ export async function buildGeoProjekt(projektId: string): Promise<GeoProjekt> {
       const hoehe_m = (o.hoehe_cm ?? 0) / 100;
       const leibung_tiefe_m =
         d.leibung_vorhanden && d.leibung_tiefe_cm ? Number(d.leibung_tiefe_cm) / 100 : undefined;
-      // Default: Raumlevel-Größenregel (>2,5 m²). Nur explizites "nicht abziehen" überschreibt.
       const abzug = d.von_wandflaeche_abziehen === false ? false : undefined;
       for (let i = 0; i < anzahl; i++) geoOeffnungen.push({ art, breite_m, hoehe_m, leibung_tiefe_m, abzug });
     }
@@ -47,7 +63,8 @@ export async function buildGeoProjekt(projektId: string): Promise<GeoProjekt> {
       geschoss: r.etage ?? "",
       raum: r.name,
       raumhoehe_m: r.raumhoehe_cm / 100,
-      wand: { rechteck: { laenge_m: r.laenge_cm / 100, breite_m: r.breite_cm / 100 } },
+      wand,
+      boden,
       oeffnungen: geoOeffnungen,
     });
   }

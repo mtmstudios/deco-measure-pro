@@ -11,6 +11,7 @@ import { NumberInput } from "@/components/number-input";
 import { cn } from "@/lib/utils";
 import { setRaumLeistung, type RaumLeistungRow } from "@/lib/raum-leistung";
 import { RaumGrundrissCard } from "@/components/raum-grundriss";
+import { GeometrieEditor } from "@/components/geometrie-editor";
 
 export const Route = createFileRoute("/_authenticated/projekt/$id/raum/$raumId")({
   head: () => ({ meta: [{ title: "Raum erfassen" }] }),
@@ -244,6 +245,8 @@ function Step1({ raum }: { raum: any }) {
       <Button onClick={save} disabled={saving} size="lg" className="h-14 w-full text-base">
         {saving ? <Loader2 className="size-5 animate-spin" /> : "Raumdaten speichern"}
       </Button>
+
+      <GeometrieEditor raumId={raum.id} initial={(raum as any).geometrie ?? null} />
 
       <SectionTitle>Sonderflächen (optional)</SectionTitle>
       <div className="space-y-3">
