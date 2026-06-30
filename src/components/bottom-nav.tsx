@@ -9,19 +9,19 @@ const items = [
 export function BottomNav() {
   return (
     <nav
-      className="fixed bottom-0 inset-x-0 z-20 bg-background border-t-2 border-foreground"
+      className="fixed bottom-0 inset-x-0 z-20 bg-card/95 backdrop-blur border-t border-border"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ul className="grid grid-cols-2">
-        {items.map(({ to, label, icon: Icon }, i) => (
-          <li key={to} className={i === 0 ? "border-r-2 border-foreground" : ""}>
+        {items.map(({ to, label, icon: Icon }) => (
+          <li key={to}>
             <Link
               to={to}
-              className="flex flex-col items-center justify-center gap-1 py-3 min-h-16 cursor-pointer text-foreground font-bold uppercase tracking-wide data-[status=active]:bg-primary data-[status=active]:text-primary-foreground"
+              className="flex flex-col items-center justify-center gap-1 py-3 min-h-16 cursor-pointer text-muted-foreground uppercase tracking-[0.08em] transition-colors data-[status=active]:text-foreground data-[status=active]:font-semibold"
               activeOptions={{ exact: true }}
             >
-              <Icon className="size-7" strokeWidth={2.5} />
-              <span className="text-xs">{label}</span>
+              <Icon className="size-6" strokeWidth={1.75} />
+              <span className="text-[11px]">{label}</span>
             </Link>
           </li>
         ))}

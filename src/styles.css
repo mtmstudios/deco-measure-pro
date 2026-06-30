@@ -1,22 +1,22 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap");
 
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Aufmaß-App design system — NEUBRUTALISM.
- * Baustellen-tauglich: hell, kompromissloser Kontrast (Schwarz auf Weiß),
- * harte schwarze Ränder + harte Offset-Schatten, scharfe Ecken (Radius 0),
- * Warngelb = Haupt-Aktion, Blau = Interaktion/Auswahl, Maße in Monospace.
+ * Aufmaß-App design system — angelehnt an die MYR / Deco & More Markenwelt.
+ * Warm, editorial, edel: Creme-Hintergrund, ruhiges Anthrazit, dünne warme
+ * Ränder, weiche Schatten, elegante Serif-Headlines (Fraunces) + klare Sans
+ * (Inter) fürs UI. Großzügig, kontraststark genug für die Baustelle.
  */
 
 @theme inline {
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -25,8 +25,6 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-action: var(--action);
-  --color-action-foreground: var(--action-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -45,61 +43,50 @@
   --color-ring-offset-background: var(--background);
 
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "Space Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 
 :root {
-  --radius: 0rem;
+  --radius: 0.625rem;
 
-  /* Reines Weiß / reines Schwarz — maximaler Kontrast bei Sonnenlicht */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0 0 0);
+  /* Warmes Creme-Papier + ruhiges Anthrazit */
+  --background: oklch(0.955 0.012 80);
+  --foreground: oklch(0.265 0.008 70);
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0 0 0);
+  --card: oklch(0.982 0.007 80);
+  --card-foreground: oklch(0.265 0.008 70);
+  --popover: oklch(0.982 0.007 80);
+  --popover-foreground: oklch(0.265 0.008 70);
 
-  /* Blau = Interaktion / Auswahl (auch als Text lesbar, ~6:1) */
-  --primary: oklch(0.48 0.23 264);
-  --primary-foreground: oklch(1 0 0);
+  /* Primär = Anthrazit (dunkle Fläche, helle Schrift — wie die Website-CTAs) */
+  --primary: oklch(0.265 0.008 70);
+  --primary-foreground: oklch(0.97 0.008 80);
 
-  /* Warngelb = laute Haupt-Aktion (immer mit schwarzem Text) */
-  --action: oklch(0.86 0.18 96);
-  --action-foreground: oklch(0 0 0);
+  --secondary: oklch(0.915 0.014 80); /* warmes Sand */
+  --secondary-foreground: oklch(0.265 0.008 70);
 
-  --secondary: oklch(1 0 0);
-  --secondary-foreground: oklch(0 0 0);
+  --muted: oklch(0.925 0.012 80);
+  --muted-foreground: oklch(0.5 0.014 68); /* warmes Taupe, ~5:1 */
 
-  --muted: oklch(0.95 0 0);
-  --muted-foreground: oklch(0.32 0 0); /* dunkles Grau, ~7:1 */
+  --accent: oklch(0.91 0.018 78); /* warmer Hover-Ton */
+  --accent-foreground: oklch(0.265 0.008 70);
 
-  --accent: oklch(0.95 0.1 96); /* blasses Gelb für Hover */
-  --accent-foreground: oklch(0 0 0);
+  /* Gedämpfte, edle Statusfarben */
+  --destructive: oklch(0.52 0.14 32); /* Terrakotta-Ziegel */
+  --destructive-foreground: oklch(0.97 0.008 80);
+  --success: oklch(0.55 0.06 150); /* Salbei */
+  --success-foreground: oklch(0.97 0.008 80);
+  --warning: oklch(0.72 0.11 78); /* Ocker */
+  --warning-foreground: oklch(0.265 0.008 70);
 
-  --destructive: oklch(0.55 0.24 28);
-  --destructive-foreground: oklch(1 0 0);
-
-  --success: oklch(0.58 0.18 150);
-  --success-foreground: oklch(1 0 0);
-
-  --warning: oklch(0.82 0.18 85);
-  --warning-foreground: oklch(0 0 0);
-
-  /* Pure schwarze Ränder */
-  --border: oklch(0 0 0);
-  --input: oklch(0 0 0);
-  --ring: oklch(0.48 0.23 264); /* blauer Fokus-Ring */
+  /* Dünne, warme Ränder */
+  --border: oklch(0.875 0.013 78);
+  --input: oklch(0.84 0.014 78);
+  --ring: oklch(0.45 0.02 68);
 }
 
 @layer base {
-  /* Brutalismus: überall scharfe Ecken */
-  *,
-  *::before,
-  *::after {
-    border-radius: 0 !important;
-  }
-
   * {
     border-color: var(--color-border);
   }
@@ -118,26 +105,28 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  /* Überschriften: schwer & eng */
+  /* Elegante Serif-Headlines (MYR-Look) */
   h1,
-  h2,
-  h3 {
-    font-weight: 800;
+  h2 {
+    font-family: var(--font-serif);
+    font-weight: 600;
     letter-spacing: -0.01em;
   }
+  h3 {
+    font-weight: 600;
+  }
 
-  /* Maße immer in Monospace (technisch, tabellarisch ausgerichtet) */
+  /* Maße: tabellarisch ausgerichtet, ruhig (Sans, nicht Mono) */
   input[inputmode="numeric"],
   input[inputmode="decimal"],
   input[type="number"] {
-    font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
-    font-weight: 700;
+    font-weight: 500;
   }
 
-  /* Großer, deutlicher Fokus für Handschuh-Bedienung */
+  /* Dezenter, gut sichtbarer Fokus */
   :focus-visible {
-    outline: 3px solid var(--color-ring);
+    outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
 }

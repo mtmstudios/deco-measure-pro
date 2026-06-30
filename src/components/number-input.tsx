@@ -13,7 +13,9 @@ export const NumberInput = React.forwardRef<HTMLInputElement, Props>(function Nu
   return (
     <label className="flex flex-col gap-1">
       {label && (
-        <span className="text-xs font-extrabold uppercase tracking-wide text-foreground">{label}</span>
+        <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          {label}
+        </span>
       )}
       <div className="relative">
         <input
@@ -21,14 +23,14 @@ export const NumberInput = React.forwardRef<HTMLInputElement, Props>(function Nu
           inputMode="numeric"
           pattern="[0-9]*"
           className={cn(
-            "h-14 w-full border-[3px] border-foreground bg-background px-4 text-2xl font-bold tabular-nums focus:outline-none focus-visible:ring-4 focus-visible:ring-ring",
+            "h-14 w-full rounded-lg border border-input bg-card px-4 text-2xl font-medium tabular-nums focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             suffix && "pr-14",
             className,
           )}
           {...rest}
         />
         {suffix && (
-          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-base font-extrabold text-foreground">
+          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-base font-medium text-muted-foreground">
             {suffix}
           </span>
         )}
