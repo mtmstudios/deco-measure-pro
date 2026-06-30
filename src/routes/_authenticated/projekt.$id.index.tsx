@@ -560,6 +560,18 @@ function KopfDaten({ projekt, onDelete }: { projekt: Projekt; onDelete: () => vo
           <Check className="size-4 mr-1" /> {save.isPending ? "…" : "Speichern"}
         </Button>
       </div>
+
+      <div className="pt-2 mt-2 border-t border-[var(--color-hairline)]">
+        <button
+          type="button"
+          onClick={onDelete}
+          className="w-full min-h-[52px] inline-flex items-center justify-center gap-2 text-[var(--color-danger)] hover:bg-[color-mix(in_oklab,var(--color-danger)_8%,transparent)] uppercase tracking-[0.14em] text-[12px] font-medium transition-colors duration-300"
+          style={{ transitionTimingFunction: "cubic-bezier(0.16,1,0.3,1)" }}
+        >
+          <Trash2 className="size-4" strokeWidth={1.75} />
+          Projekt löschen
+        </button>
+      </div>
     </section>
   );
 }
