@@ -361,6 +361,7 @@ export type Database = {
           created_at: string
           deckentyp: string | null
           etage: string | null
+          geometrie: Json | null
           id: string
           laenge_cm: number | null
           name: string
@@ -375,6 +376,7 @@ export type Database = {
           created_at?: string
           deckentyp?: string | null
           etage?: string | null
+          geometrie?: Json | null
           id?: string
           laenge_cm?: number | null
           name: string
@@ -389,6 +391,7 @@ export type Database = {
           created_at?: string
           deckentyp?: string | null
           etage?: string | null
+          geometrie?: Json | null
           id?: string
           laenge_cm?: number | null
           name?: string
