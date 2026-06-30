@@ -311,6 +311,7 @@ export type Database = {
           objekt_bezeichnung: string
           sachbearbeiter: string | null
           status: Database["public"]["Enums"]["projekt_status"]
+          uebergeben_at: string | null
           updated_at: string
           verkaeufer: string | null
         }
@@ -326,6 +327,7 @@ export type Database = {
           objekt_bezeichnung: string
           sachbearbeiter?: string | null
           status?: Database["public"]["Enums"]["projekt_status"]
+          uebergeben_at?: string | null
           updated_at?: string
           verkaeufer?: string | null
         }
@@ -341,6 +343,7 @@ export type Database = {
           objekt_bezeichnung?: string
           sachbearbeiter?: string | null
           status?: Database["public"]["Enums"]["projekt_status"]
+          uebergeben_at?: string | null
           updated_at?: string
           verkaeufer?: string | null
         }
