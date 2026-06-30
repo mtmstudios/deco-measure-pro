@@ -1,0 +1,1 @@
+ALTER TABLE public.raum ADD COLUMN geometrie JSONB;
