@@ -435,7 +435,36 @@ function ProjektDetail() {
   );
 }
 
-function KopfDaten({ projekt }: { projekt: Projekt }) {
+function UebergabeHinweis({ at }: { at: string | null }) {
+  const date = at
+    ? new Date(at).toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+    : null;
+  return (
+    <section
+      className="relative bg-[var(--color-sand-deep)] border border-[var(--color-hairline)] pl-4 pr-4 py-3 flex items-center gap-3"
+      style={{ borderRadius: 2 }}
+    >
+      <span
+        aria-hidden
+        className="absolute left-0 top-0 bottom-0"
+        style={{ width: 3, background: "var(--color-brand)" }}
+      />
+      <Check
+        className="size-4 shrink-0 text-[var(--color-brand)]"
+        strokeWidth={1.75}
+      />
+      <p className="text-[13px] text-[var(--color-stone-muted)]">
+        An Raumlevel übergeben{date ? <> am <span className="num-serif text-[var(--color-ink)]">{date}</span></> : null}
+      </p>
+    </section>
+  );
+}
+
+function KopfDaten({ projekt, onDelete }: { projekt: Projekt; onDelete: () => void }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
