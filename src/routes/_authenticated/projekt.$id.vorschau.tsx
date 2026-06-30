@@ -153,8 +153,7 @@ function Vorschau() {
 
 function BrandingKopf({ projekt }: { projekt?: ProjektMeta }) {
   return (
-    <section className="flex flex-col items-center text-center pt-2 pb-4">
-      <AppLogo height={32} className="mb-4" />
+    <section className="pt-2 pb-2">
       <p className="eyebrow">Aufmaßprotokoll</p>
       <h2 className="font-serif text-[22px] md:text-[26px] leading-tight mt-2 text-[var(--color-ink)]">
         {projekt?.objekt_bezeichnung ?? "—"}
