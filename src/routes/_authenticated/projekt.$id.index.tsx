@@ -245,11 +245,7 @@ function ProjektDetail() {
               }
               onDuplicate={() => duplicate.mutate(r.id)}
               onRename={() => openRename(r)}
-              onDelete={() => {
-                if (window.confirm(`Raum „${r.name}" wirklich löschen?`)) {
-                  remove.mutate(r.id);
-                }
-              }}
+              onDelete={() => setDeleteTarget(r)}
             />
           ))}
         </div>
