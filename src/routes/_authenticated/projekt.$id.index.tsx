@@ -55,6 +55,7 @@ type Projekt = {
   sachbearbeiter: string | null;
   gewerk: string | null;
   status: string;
+  uebergeben_at?: string | null;
 };
 
 type Raum = {
