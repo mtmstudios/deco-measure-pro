@@ -1,15 +1,12 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { ScreenHeader } from "@/components/screen-header";
 
 export const Route = createFileRoute("/_authenticated/projekte/neu")({
-  head: () => ({ meta: [{ title: "Neuer Auftrag – Aufmaß-App" }] }),
+  head: () => ({ meta: [{ title: "Neuer Auftrag · Aufmaß-App" }] }),
   component: NeuerAuftrag,
 });
 
@@ -30,6 +27,8 @@ function NeuerAuftrag() {
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const validForm = form.kunde.trim() && form.objekt_bezeichnung.trim();
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -73,7 +72,7 @@ function NeuerAuftrag() {
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.kunde.trim() || !form.objekt_bezeichnung.trim()) {
+    if (!validForm) {
       toast.error("Kunde und Objekt-Bezeichnung sind Pflicht");
       return;
     }
@@ -81,21 +80,24 @@ function NeuerAuftrag() {
   }
 
   return (
-    <div>
-      <header className="sticky top-0 z-10 bg-background border-b">
-        <div className="px-3 py-3 flex items-center gap-2">
-          <Link
-            to="/projekte"
-            aria-label="Zurück"
-            className="size-12 rounded-lg flex items-center justify-center active:bg-accent"
+    <div className="myr-rise">
+      <ScreenHeader
+        backTo="/projekte"
+        title="Neuer Auftrag"
+        eyebrow="Auftragsdaten"
+        right={
+          <button
+            form="auftrag-form"
+            type="submit"
+            disabled={!validForm || mutation.isPending}
+            className="hidden md:inline-flex items-center gap-2 h-11 px-5 bg-[var(--color-brand)] text-[var(--color-paper)] uppercase tracking-[0.14em] text-[12px] font-medium disabled:opacity-50 hover:bg-[var(--color-brand-hover)]"
           >
-            <ArrowLeft className="size-6" />
-          </Link>
-          <h1 className="text-xl font-bold tracking-tight">Neuer Auftrag</h1>
-        </div>
-      </header>
+            {mutation.isPending ? "Speichere…" : "Speichern →"}
+          </button>
+        }
+      />
 
-      <form onSubmit={onSubmit} className="px-5 py-5 space-y-4 pb-32">
+      <form id="auftrag-form" onSubmit={onSubmit} className="mx-auto max-w-[560px] px-4 md:px-6 pt-2 pb-36 space-y-5">
         <Field id="kunde" label="Kunde *" value={form.kunde} onChange={set("kunde")} required />
         <Field id="adresse" label="Adresse" value={form.adresse} onChange={set("adresse")} />
         <Field
@@ -105,27 +107,12 @@ function NeuerAuftrag() {
           onChange={set("objekt_bezeichnung")}
           required
         />
-        <Field
-          id="auftrag_nr"
-          label="Auftrags-Nr."
-          value={form.auftrag_nr}
-          onChange={set("auftrag_nr")}
-        />
-        <Field
-          id="verkaeufer"
-          label="Verkäufer"
-          value={form.verkaeufer}
-          onChange={set("verkaeufer")}
-        />
-        <Field
-          id="sachbearbeiter"
-          label="Sachbearbeiter"
-          value={form.sachbearbeiter}
-          onChange={set("sachbearbeiter")}
-        />
+        <Field id="auftrag_nr" label="Auftrags-Nr." value={form.auftrag_nr} onChange={set("auftrag_nr")} />
+        <Field id="verkaeufer" label="Verkäufer" value={form.verkaeufer} onChange={set("verkaeufer")} />
+        <Field id="sachbearbeiter" label="Sachbearbeiter" value={form.sachbearbeiter} onChange={set("sachbearbeiter")} />
 
-        <div className="space-y-2">
-          <Label className="text-base font-semibold">Gewerk</Label>
+        <div className="pt-2">
+          <p className="text-[13px] font-medium text-[var(--color-stone-muted)] mb-2">Gewerk</p>
           <div className="flex flex-wrap gap-2">
             {GEWERKE.map((g) => {
               const active = form.gewerk === g;
@@ -133,12 +120,9 @@ function NeuerAuftrag() {
                 <button
                   key={g}
                   type="button"
+                  data-active={active}
                   onClick={() => setForm((f) => ({ ...f, gewerk: active ? "" : g }))}
-                  className={`min-h-12 px-4 rounded-xl border-2 text-base font-semibold ${
-                    active
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-card border-border"
-                  }`}
+                  className="pill"
                 >
                   {g}
                 </button>
@@ -147,14 +131,17 @@ function NeuerAuftrag() {
           </div>
         </div>
 
-        <div className="fixed left-0 right-0 bottom-16 px-5 py-3 bg-background border-t">
-          <Button
+        <div
+          className="md:hidden fixed left-0 right-0 bottom-16 px-4 py-3 bg-[var(--color-paper)] border-t border-[var(--color-hairline)]"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
+        >
+          <button
             type="submit"
-            disabled={mutation.isPending}
-            className="w-full h-14 text-base font-bold"
+            disabled={!validForm || mutation.isPending}
+            className="w-full min-h-[52px] bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)] text-[var(--color-paper)] uppercase tracking-[0.14em] text-[13px] font-medium disabled:opacity-50 transition-colors"
           >
-            {mutation.isPending ? "Speichere…" : "Auftrag speichern"}
-          </Button>
+            {mutation.isPending ? "Speichere…" : "Auftrag speichern →"}
+          </button>
         </div>
       </form>
     </div>
@@ -164,28 +151,18 @@ function NeuerAuftrag() {
 function Field({
   id,
   label,
-  value,
-  onChange,
-  required,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  required?: boolean;
-}) {
+  ...rest
+}: React.InputHTMLAttributes<HTMLInputElement> & { id: string; label: string }) {
   return (
-    <div className="space-y-2">
-      <Label htmlFor={id} className="text-base font-semibold">
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-[13px] font-medium text-[var(--color-stone-muted)]">
         {label}
-      </Label>
-      <Input
+      </label>
+      <input
         id={id}
-        value={value}
-        onChange={onChange}
-        required={required}
         autoComplete="off"
-        className="h-14 text-base"
+        {...rest}
+        className="min-h-[52px] px-4 text-[17px] bg-[var(--color-paper)] border border-[var(--color-hairline)] focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none"
       />
     </div>
   );
