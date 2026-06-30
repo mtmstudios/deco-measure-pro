@@ -95,23 +95,14 @@ function ProjektDetail() {
   const progressPct = total === 0 ? 0 : Math.round((erfasst / total) * 100);
 
   return (
-    <div className="pb-28">
-      <header className="sticky top-0 z-10 bg-background border-b">
-        <div className="px-3 py-3 flex items-center gap-2">
-          <Link
-            to="/projekte"
-            aria-label="Zurück"
-            className="size-12 rounded-lg flex items-center justify-center active:bg-accent"
-          >
-            <ArrowLeft className="size-6" />
-          </Link>
-          <h1 className="text-xl font-bold tracking-tight truncate flex-1">
-            {projekt?.objekt_bezeichnung ?? "Projekt"}
-          </h1>
-        </div>
-      </header>
+    <div className="pb-28 myr-rise">
+      <ScreenHeader
+        backTo="/projekte"
+        eyebrow={projekt?.kunde ? "Projekt" : undefined}
+        title={projekt?.objekt_bezeichnung ?? "Projekt"}
+      />
+      <div className="mx-auto max-w-[1100px] px-4 md:px-6 lg:px-8 pt-2 pb-6 space-y-6">
 
-      <div className="px-5 py-5 space-y-5">
         {projektQ.isLoading && <p className="text-base text-muted-foreground">Lade…</p>}
         {projektQ.error && (
           <p className="text-base text-destructive">{(projektQ.error as Error).message}</p>
