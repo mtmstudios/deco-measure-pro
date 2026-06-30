@@ -87,25 +87,25 @@ function RaumWizard() {
     );
   }
 
-  const stepNum = String(step).padStart(2, "0");
+  const navigate = useNavigate();
+  const isLast = step === 6;
+
+  function handleWeiter() {
+    emitWizardSave();
+    if (isLast) {
+      navigate({ to: "/projekt/$id", params: { id } });
+    } else {
+      setStep((s) => Math.min(6, s + 1));
+    }
+  }
+
   return (
     <div className="pb-32 myr-rise">
       <ScreenHeader
         backTo="/projekt/$id"
         backParams={{ id }}
-        eyebrow={<span><span className="num-serif">{stepNum}</span> &middot; 06</span>}
         title={raum.name}
-        right={
-          <Button
-            disabled={step === 6}
-            onClick={() => setStep((s) => Math.min(6, s + 1))}
-            className="h-11 px-5 text-[12px] uppercase tracking-[0.14em] font-medium bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)] text-[var(--color-paper)] rounded-none disabled:opacity-50"
-          >
-            Weiter
-            <ArrowRight className="size-4 ml-2" strokeWidth={1.75} />
-          </Button>
-        }
-        below={<StepIndicator step={step} onJump={setStep} />}
+        below={<Stepper step={step} onJump={(n) => { emitWizardSave(); setStep(n); }} />}
       />
 
       <div className="mx-auto max-w-[760px] px-4 md:px-6 py-5">
@@ -126,16 +126,16 @@ function RaumWizard() {
             variant="outline"
             className="min-h-[52px] text-[13px] uppercase tracking-[0.14em] font-medium border border-[var(--color-brand)] text-[var(--color-brand)] bg-transparent hover:bg-[color-mix(in_oklab,var(--color-brand)_8%,transparent)] rounded-none"
             disabled={step === 1}
-            onClick={() => setStep((s) => Math.max(1, s - 1))}
+            onClick={() => { emitWizardSave(); setStep((s) => Math.max(1, s - 1)); }}
           >
             Zurück
           </Button>
           <Button
-            className="min-h-[52px] text-[13px] uppercase tracking-[0.14em] font-medium bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)] text-[var(--color-paper)] rounded-none disabled:opacity-50"
-            disabled={step === 6}
-            onClick={() => setStep((s) => Math.min(6, s + 1))}
+            className="min-h-[52px] text-[13px] uppercase tracking-[0.14em] font-medium bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)] text-[var(--color-paper)] rounded-none"
+            onClick={handleWeiter}
           >
-            Weiter →
+            {isLast ? "Abschliessen" : "Weiter"}
+            <ArrowRight className="size-4 ml-2" strokeWidth={1.75} />
           </Button>
         </div>
       </nav>
@@ -143,20 +143,47 @@ function RaumWizard() {
   );
 }
 
-function StepIndicator({ step, onJump }: { step: number; onJump: (n: number) => void }) {
+function Stepper({ step, onJump }: { step: number; onJump: (n: number) => void }) {
+  const steps = [1, 2, 3, 4, 5, 6];
   return (
-    <div className="flex gap-1">
-      {[1, 2, 3, 4, 5, 6].map((n) => (
-        <button
-          key={n}
-          onClick={() => onJump(n)}
-          className={cn(
-            "flex-1 h-[5px] transition-colors",
-            n <= step ? "bg-[var(--color-brand)]" : "bg-[var(--color-sand-deep)]",
-          )}
-          aria-label={`Schritt ${n}`}
-        />
-      ))}
+    <div className="flex items-center w-full" role="list" aria-label="Wizard-Schritte">
+      {steps.map((n, i) => {
+        const isCurrent = n === step;
+        const isDone = n < step;
+        const isUpcoming = n > step;
+        const clickable = !isUpcoming;
+        return (
+          <div key={n} className="flex items-center flex-1 last:flex-none">
+            <button
+              type="button"
+              role="listitem"
+              aria-current={isCurrent ? "step" : undefined}
+              aria-label={`Schritt ${n} von 6`}
+              disabled={!clickable}
+              onClick={() => clickable && onJump(n)}
+              className={cn(
+                "relative shrink-0 inline-flex items-center justify-center",
+                "size-9 md:size-12 rounded-full transition-colors duration-300",
+                "font-sans text-[12px] md:text-[14px] tracking-[0.08em] tabular-nums",
+                isCurrent && "bg-[var(--color-brand)] text-[var(--color-paper)] ring-1 ring-offset-2 ring-offset-[var(--color-paper)] ring-[var(--color-brand)]",
+                isDone && "bg-[var(--color-brand)] text-[var(--color-paper)] cursor-pointer",
+                isUpcoming && "bg-[var(--color-paper)] text-[var(--color-stone-muted)] border-[1.5px] border-[var(--color-hairline)] cursor-not-allowed",
+              )}
+            >
+              {isDone ? <Check className="size-4 md:size-5" strokeWidth={2} /> : String(n).padStart(2, "0")}
+            </button>
+            {i < steps.length - 1 && (
+              <div
+                aria-hidden
+                className={cn(
+                  "flex-1 h-px mx-1 md:mx-2 transition-colors duration-300",
+                  n < step ? "bg-[var(--color-brand)]" : "bg-[var(--color-hairline)]",
+                )}
+              />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
