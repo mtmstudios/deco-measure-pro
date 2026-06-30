@@ -2,12 +2,12 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { FolderOpen, Plus, LogOut, ChevronRight, Home } from "lucide-react";
+import { Plus, LogOut, ChevronRight, Home } from "lucide-react";
 import { toast } from "sonner";
+import { ScreenHeader } from "@/components/screen-header";
 
 export const Route = createFileRoute("/_authenticated/projekte/")({
-  head: () => ({ meta: [{ title: "Projekte – Aufmaß-App" }] }),
+  head: () => ({ meta: [{ title: "Projekte · Aufmaß-App" }] }),
   component: ProjekteListe,
 });
 
@@ -28,13 +28,6 @@ const STATUS_LABEL: Record<ProjektStatus, string> = {
   geprueft: "Geprüft",
   uebergeben: "Übergeben",
   fehler: "Fehler",
-};
-
-const STATUS_CLASS: Record<ProjektStatus, string> = {
-  erfassung: "bg-muted text-foreground",
-  geprueft: "bg-primary text-primary-foreground",
-  uebergeben: "bg-success text-success-foreground",
-  fehler: "bg-destructive text-destructive-foreground",
 };
 
 function ProjekteListe() {
@@ -63,94 +56,93 @@ function ProjekteListe() {
   }
 
   return (
-    <div>
-      <header className="sticky top-0 z-10 bg-background border-b">
-        <div className="px-5 py-4 flex items-center justify-between">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-bold tracking-tight">Projekte</h1>
-            {email && <p className="text-sm text-muted-foreground truncate">{email}</p>}
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
+    <div className="myr-rise">
+      <ScreenHeader
+        eyebrow={email ?? undefined}
+        title="Projekte"
+        right={
+          <button
             onClick={handleLogout}
             aria-label="Abmelden"
-            className="size-12 shrink-0"
+            className="size-11 flex items-center justify-center text-[var(--color-stone-muted)] hover:text-[var(--color-ink)]"
           >
-            <LogOut className="size-6" />
-          </Button>
-        </div>
-      </header>
+            <LogOut className="size-5" strokeWidth={1.5} />
+          </button>
+        }
+      />
 
-      <div className="px-5 py-5 space-y-3">
-        {isLoading && <p className="text-base text-muted-foreground">Lade…</p>}
+      <div className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8 pt-2 pb-10">
+        {isLoading && <p className="text-[var(--color-stone-muted)]">Lade…</p>}
         {error && (
-          <p className="text-base text-destructive">Fehler beim Laden: {(error as Error).message}</p>
+          <p className="text-[var(--color-danger)]">Fehler beim Laden: {(error as Error).message}</p>
         )}
         {!isLoading && projekte && projekte.length === 0 && <EmptyState />}
-        {projekte?.map((p) => {
-          const raumCount = p.raum?.[0]?.count ?? 0;
-          return (
-            <Link
-              key={p.id}
-              to="/projekt/$id"
-              params={{ id: p.id }}
-              className="block bg-card border-2 border-border rounded-2xl px-4 py-4 active:bg-accent"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span
-                      className={`inline-block text-xs font-bold uppercase tracking-wide px-2 py-1 rounded ${STATUS_CLASS[p.status]}`}
-                    >
-                      {STATUS_LABEL[p.status]}
-                    </span>
-                    {p.gewerk && (
-                      <span className="text-xs font-semibold text-muted-foreground uppercase">
-                        {p.gewerk}
-                      </span>
-                    )}
-                  </div>
-                  <h2 className="text-lg font-bold leading-tight truncate">
-                    {p.objekt_bezeichnung}
-                  </h2>
-                  <p className="text-base text-foreground truncate">{p.kunde}</p>
-                  <div className="mt-2 flex items-center gap-3 text-sm text-muted-foreground">
-                    {p.auftrag_nr && <span>Auftrag {p.auftrag_nr}</span>}
-                    <span className="inline-flex items-center gap-1">
-                      <Home className="size-4" />
-                      {raumCount} {raumCount === 1 ? "Raum" : "Räume"}
-                    </span>
-                  </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+          {projekte?.map((p) => {
+            const raumCount = p.raum?.[0]?.count ?? 0;
+            return (
+              <Link
+                key={p.id}
+                to="/projekt/$id"
+                params={{ id: p.id }}
+                className="myr-card block p-5 hover:border-[var(--color-brand)] transition-colors"
+              >
+                <div className="eyebrow mb-3">
+                  <span>{STATUS_LABEL[p.status]}</span>
+                  {p.gewerk && <span> · {p.gewerk}</span>}
                 </div>
-                <ChevronRight className="size-6 text-muted-foreground shrink-0 mt-1" />
-              </div>
-            </Link>
-          );
-        })}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="font-serif text-[20px] leading-tight text-[var(--color-ink)] truncate">
+                      {p.objekt_bezeichnung}
+                    </h2>
+                    <p className="mt-1 text-[15px] text-[var(--color-ink)] truncate">{p.kunde}</p>
+                    <div className="mt-3 flex items-center gap-4 text-[13px] text-[var(--color-stone-muted)]">
+                      {p.auftrag_nr && <span>Auftrag {p.auftrag_nr}</span>}
+                      <span className="inline-flex items-center gap-1.5">
+                        <Home className="size-3.5" strokeWidth={1.5} />
+                        {raumCount} {raumCount === 1 ? "Raum" : "Räume"}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="size-5 text-[var(--color-stone-muted)] shrink-0 mt-1" strokeWidth={1.5} />
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       <button
         type="button"
         onClick={() => navigate({ to: "/projekte/neu" })}
-        className="fixed right-5 bottom-24 h-14 pl-5 pr-6 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center gap-2 font-bold text-base active:scale-95 transition-transform"
+        className="md:hidden fixed right-5 bottom-24 h-[52px] pl-5 pr-6 bg-[var(--color-brand)] text-[var(--color-paper)] flex items-center gap-2 uppercase tracking-[0.14em] text-[13px] font-medium active:bg-[var(--color-brand-hover)]"
         aria-label="Neuer Auftrag"
       >
-        <Plus className="size-6" strokeWidth={2.75} />
+        <Plus className="size-5" strokeWidth={1.75} />
         Neuer Auftrag
       </button>
+
+      <div className="hidden md:flex justify-center pb-12">
+        <Link
+          to="/projekte/neu"
+          className="inline-flex items-center gap-3 min-h-[52px] px-7 bg-[var(--color-brand)] text-[var(--color-paper)] uppercase tracking-[0.14em] text-[13px] font-medium hover:bg-[var(--color-brand-hover)]"
+        >
+          <Plus className="size-4" strokeWidth={1.75} />
+          Neuer Auftrag
+        </Link>
+      </div>
     </div>
   );
 }
 
 function EmptyState() {
   return (
-    <div className="border-2 border-dashed border-border rounded-2xl px-6 py-14 text-center">
-      <div className="size-16 rounded-2xl bg-accent text-accent-foreground mx-auto flex items-center justify-center mb-4">
-        <FolderOpen className="size-9" strokeWidth={2.5} />
-      </div>
-      <h2 className="text-xl font-bold mb-2">Noch keine Projekte</h2>
-      <p className="text-base text-muted-foreground max-w-xs mx-auto">
+    <div className="myr-card px-6 py-14 text-center max-w-md mx-auto">
+      <p className="eyebrow mb-3">Keine Projekte</p>
+      <h2 className="font-serif text-[22px] mb-2">Noch nichts erfasst</h2>
+      <p className="text-[15px] text-[var(--color-stone-muted)]">
         Lege ein neues Projekt an, um mit dem Aufmaß zu beginnen.
       </p>
     </div>

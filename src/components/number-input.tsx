@@ -20,17 +20,17 @@ export const NumberInput = React.forwardRef<HTMLInputElement, Props>(function Nu
       <div className="relative">
         <input
           ref={ref}
-          inputMode="numeric"
-          pattern="[0-9]*"
+          inputMode="decimal"
+          pattern="[0-9.,]*"
           className={cn(
-            "h-14 w-full rounded-lg border border-input bg-card px-4 text-2xl font-medium tabular-nums focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            "min-h-[52px] w-full bg-[var(--color-paper)] border border-[var(--color-hairline)] px-4 text-[22px] font-serif tabular-nums focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none",
             suffix && "pr-14",
             className,
           )}
           {...rest}
         />
         {suffix && (
-          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-base font-medium text-muted-foreground">
+          <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[13px] font-medium text-[var(--color-stone-muted)]">
             {suffix}
           </span>
         )}

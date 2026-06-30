@@ -1,8 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, ArrowRight, Check, Plus, Trash2, AlertTriangle, AlertOctagon, Loader2 } from "lucide-react";
+import { ArrowRight, Check, Plus, Trash2, AlertTriangle, AlertOctagon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { setRaumLeistung, type RaumLeistungRow } from "@/lib/raum-leistung";
 import { RaumGrundrissCard } from "@/components/raum-grundriss";
 import { GeometrieEditor } from "@/components/geometrie-editor";
+import { ScreenHeader } from "@/components/screen-header";
 
 export const Route = createFileRoute("/_authenticated/projekt/$id/raum/$raumId")({
   head: () => ({ meta: [{ title: "Raum erfassen" }] }),
@@ -81,31 +82,28 @@ function RaumWizard() {
     );
   }
 
+  const stepNum = String(step).padStart(2, "0");
   return (
-    <div className="pb-32">
-      <header className="sticky top-0 z-10 bg-background border-b">
-        <div className="px-3 py-3 flex items-center gap-2">
-          <Link to="/projekt/$id" params={{ id }} aria-label="Zurück" className="size-12 rounded-lg flex items-center justify-center active:bg-accent">
-            <ArrowLeft className="size-6" />
-          </Link>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold tracking-tight truncate">{raum.name}</h1>
-            <p className="text-xs text-muted-foreground">Schritt {step} von 6</p>
-          </div>
+    <div className="pb-32 myr-rise">
+      <ScreenHeader
+        backTo="/projekt/$id"
+        backParams={{ id }}
+        eyebrow={<span><span className="num-serif">{stepNum}</span> &middot; 06</span>}
+        title={raum.name}
+        right={
           <Button
-            size="lg"
-            className="h-12 px-4 text-sm font-semibold"
             disabled={step === 6}
             onClick={() => setStep((s) => Math.min(6, s + 1))}
+            className="h-11 px-5 text-[12px] uppercase tracking-[0.14em] font-medium bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)] text-[var(--color-paper)] rounded-none disabled:opacity-50"
           >
             Weiter
-            <ArrowRight className="size-5 ml-1" />
+            <ArrowRight className="size-4 ml-2" strokeWidth={1.75} />
           </Button>
-        </div>
-        <StepIndicator step={step} onJump={setStep} />
-      </header>
+        }
+        below={<StepIndicator step={step} onJump={setStep} />}
+      />
 
-      <div className="px-4 py-5">
+      <div className="mx-auto max-w-[760px] px-4 md:px-6 py-5">
         {step === 1 && <Step1 raum={raum} />}
         {step === 2 && <Step2 raumId={raumId} />}
         {step === 3 && <Step3 raumId={raumId} katalog={katalog} />}
@@ -114,24 +112,25 @@ function RaumWizard() {
         {step === 6 && <Step6 raumId={raumId} projektId={id} />}
       </div>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-20 border-t bg-background pb-[env(safe-area-inset-bottom)]">
-        <div className="grid grid-cols-2 gap-2 px-3 py-3">
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-20 border-t border-[var(--color-hairline)] bg-[var(--color-paper)] md:left-[220px]"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="mx-auto max-w-[760px] grid grid-cols-2 gap-3 px-4 py-3">
           <Button
             variant="outline"
-            size="lg"
-            className="h-14 text-base"
+            className="min-h-[52px] text-[13px] uppercase tracking-[0.14em] font-medium border border-[var(--color-brand)] text-[var(--color-brand)] bg-transparent hover:bg-[color-mix(in_oklab,var(--color-brand)_8%,transparent)] rounded-none"
             disabled={step === 1}
             onClick={() => setStep((s) => Math.max(1, s - 1))}
           >
             Zurück
           </Button>
           <Button
-            size="lg"
-            className="h-14 text-base"
+            className="min-h-[52px] text-[13px] uppercase tracking-[0.14em] font-medium bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)] text-[var(--color-paper)] rounded-none disabled:opacity-50"
             disabled={step === 6}
             onClick={() => setStep((s) => Math.min(6, s + 1))}
           >
-            Weiter
+            Weiter →
           </Button>
         </div>
       </nav>
@@ -141,14 +140,14 @@ function RaumWizard() {
 
 function StepIndicator({ step, onJump }: { step: number; onJump: (n: number) => void }) {
   return (
-    <div className="flex gap-1 px-3 pb-3">
+    <div className="flex gap-1">
       {[1, 2, 3, 4, 5, 6].map((n) => (
         <button
           key={n}
           onClick={() => onJump(n)}
           className={cn(
-            "flex-1 h-2 rounded-full transition-colors",
-            n < step ? "bg-success" : n === step ? "bg-primary" : "bg-muted",
+            "flex-1 h-[5px] transition-colors",
+            n <= step ? "bg-[var(--color-brand)]" : "bg-[var(--color-sand-deep)]",
           )}
           aria-label={`Schritt ${n}`}
         />

@@ -1,12 +1,13 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Copy, Plus, Check, Pencil, X, Eye, Send } from "lucide-react";
+import { Copy, Plus, Check, Pencil, X, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { ScreenHeader } from "@/components/screen-header";
 
 export const Route = createFileRoute("/_authenticated/projekt/$id/")({
   head: () => ({ meta: [{ title: "Projekt – Aufmaß-App" }] }),
@@ -94,23 +95,14 @@ function ProjektDetail() {
   const progressPct = total === 0 ? 0 : Math.round((erfasst / total) * 100);
 
   return (
-    <div className="pb-28">
-      <header className="sticky top-0 z-10 bg-background border-b">
-        <div className="px-3 py-3 flex items-center gap-2">
-          <Link
-            to="/projekte"
-            aria-label="Zurück"
-            className="size-12 rounded-lg flex items-center justify-center active:bg-accent"
-          >
-            <ArrowLeft className="size-6" />
-          </Link>
-          <h1 className="text-xl font-bold tracking-tight truncate flex-1">
-            {projekt?.objekt_bezeichnung ?? "Projekt"}
-          </h1>
-        </div>
-      </header>
+    <div className="pb-28 myr-rise">
+      <ScreenHeader
+        backTo="/projekte"
+        eyebrow={projekt?.kunde ? "Projekt" : undefined}
+        title={projekt?.objekt_bezeichnung ?? "Projekt"}
+      />
+      <div className="mx-auto max-w-[1100px] px-4 md:px-6 lg:px-8 pt-2 pb-6 space-y-6">
 
-      <div className="px-5 py-5 space-y-5">
         {projektQ.isLoading && <p className="text-base text-muted-foreground">Lade…</p>}
         {projektQ.error && (
           <p className="text-base text-destructive">{(projektQ.error as Error).message}</p>
@@ -120,14 +112,14 @@ function ProjektDetail() {
 
         <section>
           <div className="flex items-baseline justify-between mb-2">
-            <h2 className="text-lg font-bold">Räume</h2>
-            <p className="text-base font-semibold">
-              {erfasst} von {total} erfasst
+            <h2 className="font-serif text-[22px] font-medium">Räume</h2>
+            <p className="text-[13px] text-[var(--color-stone-muted)]">
+              <span className="num-serif">{erfasst}</span> von <span className="num-serif">{total}</span> erfasst
             </p>
           </div>
-          <div className="h-3 bg-muted rounded-full overflow-hidden">
+          <div className="h-[5px] bg-[var(--color-sand-deep)] overflow-hidden">
             <div
-              className="h-full bg-primary transition-all"
+              className="h-full bg-[var(--color-brand)] transition-all"
               style={{ width: `${progressPct}%` }}
             />
           </div>
@@ -162,21 +154,23 @@ function ProjektDetail() {
         </Button>
       </div>
 
-      <div className="fixed left-0 right-0 bottom-16 px-5 py-3 bg-background border-t flex gap-3">
+      <div
+        className="fixed left-0 right-0 bottom-16 md:bottom-0 md:left-[220px] px-4 md:px-8 py-3 bg-[var(--color-paper)] border-t border-[var(--color-hairline)] flex gap-3"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
+      >
         <Button
           variant="outline"
-          className="flex-1 h-14 text-base font-bold border-2"
+          className="flex-1 min-h-[52px] text-[13px] uppercase tracking-[0.14em] font-medium border border-[var(--color-brand)] text-[var(--color-brand)] bg-transparent hover:bg-[color-mix(in_oklab,var(--color-brand)_8%,transparent)] rounded-none"
           onClick={() => navigate({ to: "/projekt/$id/vorschau", params: { id } })}
         >
-          <Eye className="size-5 mr-1" />
+          <Eye className="size-4 mr-2" strokeWidth={1.5} />
           Vorschau
         </Button>
         <Button
-          className="flex-1 h-14 text-base font-bold"
+          className="flex-1 min-h-[52px] text-[13px] uppercase tracking-[0.14em] font-medium bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)] text-[var(--color-paper)] rounded-none"
           onClick={() => navigate({ to: "/projekt/$id/vorschau", params: { id } })}
         >
-          <Send className="size-5 mr-1" />
-          Übergabe
+          Übergabe →
         </Button>
       </div>
     </div>

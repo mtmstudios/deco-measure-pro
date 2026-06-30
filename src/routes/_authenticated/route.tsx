@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { BottomNav } from "@/components/bottom-nav";
+import { SideNav } from "@/components/side-nav";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -14,8 +15,9 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedLayout() {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <main className="flex-1 pb-20">
+    <div className="min-h-screen flex bg-[var(--color-paper)]">
+      <SideNav />
+      <main className="flex-1 min-w-0 pb-24 md:pb-8">
         <Outlet />
       </main>
       <BottomNav />
