@@ -58,15 +58,16 @@ function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-10 bg-[var(--color-paper)]">
-      <div className="w-full max-w-[440px] myr-rise">
-        <div className="flex flex-col items-center mb-12">
-          <AppLogo variant="full" height={84} />
-          <p className="mt-6 font-serif text-[22px] text-[var(--color-ink)]">Aufmaß-App</p>
-          <p className="eyebrow mt-2">Deco &amp; More</p>
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center px-5 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] bg-[var(--color-paper)]">
+      <div className="w-full max-w-[400px] myr-rise">
+        <div className="flex flex-col items-center">
+          <AppLogo variant="full" className="!h-[68px] md:!h-[88px] w-auto" />
+          <p className="mt-2 text-[12px] md:text-[13px] uppercase tracking-[0.14em] text-[var(--color-stone-muted)] font-medium">
+            Aufmaß-App
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="mt-10 space-y-5">
           <Field
             id="email"
             label="E-Mail"
