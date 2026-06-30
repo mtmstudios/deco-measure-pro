@@ -7,7 +7,7 @@ import { buildGeoProjekt } from "@/lib/build-geo-projekt";
 import { generateAufmassZeilen, zeilenToXlsx } from "@/lib/raumlevel-export";
 import { Button } from "@/components/ui/button";
 import { ScreenHeader } from "@/components/screen-header";
-import { AppLogo } from "@/components/app-logo";
+
 import {
   AlertOctagon,
   ChevronDown,
