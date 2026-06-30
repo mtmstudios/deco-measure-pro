@@ -236,6 +236,20 @@ function ProjektDetail() {
   const [renameTarget, setRenameTarget] = useState<Raum | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Raum | null>(null);
+  const [deleteProjektOpen, setDeleteProjektOpen] = useState(false);
+
+  const deleteProjekt = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("projekt" as never).delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["projekte"] });
+      toast.success("Projekt gelöscht");
+      navigate({ to: "/projekte" });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   function openRename(r: Raum) {
     setRenameTarget(r);
