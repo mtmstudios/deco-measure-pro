@@ -290,9 +290,16 @@ function Step1({ raum }: { raum: any }) {
         </div>
       </div>
 
-      <Button onClick={save} disabled={saving} size="lg" className="h-14 w-full text-base">
-        {saving ? <Loader2 className="size-5 animate-spin" /> : "Raumdaten speichern"}
-      </Button>
+      <div className="pt-1">
+        <button
+          type="button"
+          onClick={() => void save()}
+          disabled={saving}
+          className="link-quiet text-sm disabled:opacity-50"
+        >
+          {saving ? "Speichert…" : "Jetzt zwischenspeichern"}
+        </button>
+      </div>
 
       <GeometrieEditor raumId={raum.id} initial={(raum as any).geometrie ?? null} />
 
