@@ -431,6 +431,33 @@ function ProjektDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Projekt-Löschen-Bestätigung */}
+      <AlertDialog open={deleteProjektOpen} onOpenChange={setDeleteProjektOpen}>
+        <AlertDialogContent className="rounded-none border-[var(--color-hairline)] bg-[var(--color-sand-deep)]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-serif text-[20px] font-medium">
+              Projekt wirklich löschen?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-[15px] text-[var(--color-stone-muted)]">
+              {projekt
+                ? `„${projekt.objekt_bezeichnung}" wird mit allen Räumen und Daten entfernt. Das kann nicht rückgängig gemacht werden.`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="min-h-[48px] rounded-none border border-[var(--color-hairline)] bg-transparent text-[var(--color-ink)] hover:bg-[var(--color-paper)] uppercase tracking-[0.14em] text-[12px] mt-0">
+              Abbrechen
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="min-h-[48px] rounded-none bg-[var(--color-danger)] hover:bg-[#86493F] text-[var(--color-paper)] uppercase tracking-[0.14em] text-[12px]"
+              onClick={() => deleteProjekt.mutate()}
+            >
+              <Trash2 className="size-4 mr-2" strokeWidth={1.75} /> Löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
