@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Copy, Plus, Check, Pencil, X, Eye, Send } from "lucide-react";
+import { Copy, Plus, Check, Pencil, X, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { ScreenHeader } from "@/components/screen-header";
 
