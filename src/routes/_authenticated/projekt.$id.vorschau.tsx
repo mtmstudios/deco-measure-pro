@@ -181,14 +181,12 @@ function BefundLeiste({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        {/* Blocker-Pill */}
+        {/* Blocker-Pill: ruhig, Terracotta-Rand auf Sand */}
         <span
           className="inline-flex items-center gap-2 min-h-[32px] px-3 text-[13px] font-sans"
           style={{
             borderRadius: 2,
-            background: hasBlocker
-              ? "color-mix(in oklab, var(--color-danger) 6%, var(--color-paper))"
-              : "transparent",
+            background: hasBlocker ? "var(--color-sand)" : "transparent",
             border: `1px solid ${hasBlocker ? "var(--color-danger)" : "var(--color-hairline)"}`,
             color: hasBlocker ? "var(--color-danger)" : "var(--color-stone-muted)",
           }}
@@ -202,17 +200,21 @@ function BefundLeiste({
           {blocker.length === 1 ? "Blocker" : "Blocker"}
         </span>
 
-        {/* Warnungen-Pill */}
+        {/* Warnungen-Pill: bei 0 entspannt */}
         <span
           className="inline-flex items-center gap-2 min-h-[32px] px-3 text-[13px] font-sans"
           style={{
             borderRadius: 2,
-            background: "transparent",
+            background: hasWarnung ? "var(--color-sand)" : "transparent",
             border: `1px solid var(--color-hairline)`,
             color: hasWarnung ? "var(--color-ink)" : "var(--color-stone-muted)",
           }}
         >
-          {hasWarnung ? null : <Check className="size-4" strokeWidth={1.75} />}
+          {hasWarnung ? (
+            <AlertOctagon className="size-4" strokeWidth={1.75} />
+          ) : (
+            <Check className="size-4" strokeWidth={1.75} />
+          )}
           <span className="num-serif">{warnungen.length}</span>{" "}
           {warnungen.length === 1 ? "Warnung" : "Warnungen"}
         </span>
@@ -222,14 +224,15 @@ function BefundLeiste({
             type="button"
             onClick={() => setOpen((v) => !v)}
             className="link-quiet text-[13px] ml-auto"
+            aria-expanded={open}
           >
-            {open ? "Liste ausblenden" : "Liste anzeigen"}
+            {open ? "Liste ausblenden ⌄" : "Liste anzeigen ⌃"}
           </button>
         )}
       </div>
 
       {open && (hasBlocker || hasWarnung) && (
-        <ul className="myr-card divide-y divide-[var(--color-hairline)]">
+        <ul className="myr-card divide-y divide-[var(--color-hairline)] myr-collapse">
           {blocker.map((b, i) => (
             <BefundZeile key={`b-${i}`} b={b} ton="danger" />
           ))}
