@@ -338,6 +338,10 @@ function RaumWizard() {
   const { id, raumId } = Route.useParams();
   const [step, setStep] = useState(1);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [step]);
+
   const { data: raum, isLoading } = useQuery({
     queryKey: ["raum", raumId],
     queryFn: async () => {
