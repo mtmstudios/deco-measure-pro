@@ -199,7 +199,7 @@ function Step1({ raum }: { raum: any }) {
   const [etage, setEtage] = useState(raum.etage ?? "");
   const [saving, setSaving] = useState(false);
 
-  async function save() {
+  async function save(opts: { silent?: boolean } = {}) {
     setSaving(true);
     const { error } = await supabase
       .from("raum")
@@ -213,13 +213,21 @@ function Step1({ raum }: { raum: any }) {
       })
       .eq("id", raum.id);
     setSaving(false);
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Gespeichert");
-      qc.invalidateQueries({ queryKey: ["raum", raum.id] });
-      qc.invalidateQueries({ queryKey: ["raeume", raum.projekt_id] });
+    if (error) {
+      toast.error(error.message);
+      return;
     }
+    if (!opts.silent) toast.success("Gespeichert");
+    qc.invalidateQueries({ queryKey: ["raum", raum.id] });
+    qc.invalidateQueries({ queryKey: ["raeume", raum.projekt_id] });
   }
+
+  useEffect(() => {
+    const handler = () => { void save({ silent: true }); };
+    window.addEventListener(WIZARD_SAVE_EVENT, handler);
+    return () => window.removeEventListener(WIZARD_SAVE_EVENT, handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [name, laenge, breite, hoehe, deckentyp, etage]);
 
   const { data: tfs = [], refetch } = useQuery({
     queryKey: ["raum_teilflaeche", raum.id],
