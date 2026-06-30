@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Check, Plus, Trash2, AlertTriangle, AlertOctagon, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Plus, Trash2, AlertTriangle, AlertOctagon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -92,6 +92,15 @@ function RaumWizard() {
             <h1 className="text-xl font-bold tracking-tight truncate">{raum.name}</h1>
             <p className="text-xs text-muted-foreground">Schritt {step} von 6</p>
           </div>
+          <Button
+            size="lg"
+            className="h-12 px-4 text-sm font-semibold"
+            disabled={step === 6}
+            onClick={() => setStep((s) => Math.min(6, s + 1))}
+          >
+            Weiter
+            <ArrowRight className="size-5 ml-1" />
+          </Button>
         </div>
         <StepIndicator step={step} onJump={setStep} />
       </header>
