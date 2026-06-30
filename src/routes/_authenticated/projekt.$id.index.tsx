@@ -157,14 +157,77 @@ function ProjektDetail() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const CHILD_TABLES = [
+    "raum_teilflaeche",
+    "oeffnung",
+    "heizkoerper",
+    "acryl_position",
+    "raum_leistung",
+  ] as const;
+
+  async function restoreRaum(snapshot: {
+    raum: Record<string, unknown>;
+    children: Record<string, Record<string, unknown>[]>;
+  }) {
+    const { error: e1 } = await supabase
+      .from("raum" as never)
+      .insert(snapshot.raum as never);
+    if (e1) throw e1;
+    for (const t of CHILD_TABLES) {
+      const rows = snapshot.children[t];
+      if (rows && rows.length > 0) {
+        const { error } = await supabase.from(t as never).insert(rows as never);
+        if (error) throw error;
+      }
+    }
+  }
+
   const remove = useMutation({
     mutationFn: async (raumId: string) => {
+      const { data: raumRow, error: eR } = await supabase
+        .from("raum" as never)
+        .select("*")
+        .eq("id", raumId)
+        .maybeSingle();
+      if (eR) throw eR;
+      if (!raumRow) throw new Error("Raum nicht gefunden");
+
+      const children: Record<string, Record<string, unknown>[]> = {};
+      for (const t of CHILD_TABLES) {
+        const { data, error } = await supabase
+          .from(t as never)
+          .select("*")
+          .eq("raum_id", raumId);
+        if (error) throw error;
+        children[t] = (data ?? []) as Record<string, unknown>[];
+      }
+
       const { error } = await supabase.from("raum" as never).delete().eq("id", raumId);
       if (error) throw error;
+
+      return {
+        raum: raumRow as unknown as Record<string, unknown>,
+        children,
+      };
     },
-    onSuccess: () => {
+    onSuccess: (snapshot) => {
       qc.invalidateQueries({ queryKey: ["raeume", id] });
-      toast.success("Raum gelöscht");
+      toast.success("Raum gelöscht", {
+        duration: 8000,
+        action: {
+          label: "Rückgängig",
+          onClick: () => {
+            restoreRaum(snapshot)
+              .then(() => {
+                qc.invalidateQueries({ queryKey: ["raeume", id] });
+                toast.success("Raum wiederhergestellt");
+              })
+              .catch((e: Error) =>
+                toast.error("Wiederherstellen fehlgeschlagen: " + e.message),
+              );
+          },
+        },
+      });
     },
     onError: (e: Error) => toast.error(e.message),
   });
