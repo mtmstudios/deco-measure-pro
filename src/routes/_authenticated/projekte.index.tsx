@@ -70,75 +70,77 @@ function ProjekteListe() {
   const hasProjects = !!projekte && projekte.length > 0;
 
   return (
-    <div className="myr-rise">
-      <ScreenHeader
-        right={
-          <button
-            onClick={handleLogout}
-            aria-label="Abmelden"
-            className="size-11 flex items-center justify-center text-[var(--color-stone-muted)] hover:text-[var(--color-ink)]"
-          >
-            <LogOut className="size-5" strokeWidth={1.5} />
-          </button>
-        }
-      />
+    <>
+      <div className="myr-rise">
+        <ScreenHeader
+          right={
+            <button
+              onClick={handleLogout}
+              aria-label="Abmelden"
+              className="size-11 flex items-center justify-center text-[var(--color-stone-muted)] hover:text-[var(--color-ink)]"
+            >
+              <LogOut className="size-5" strokeWidth={1.5} />
+            </button>
+          }
+        />
 
-      <div className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8 pt-4 pb-24 md:pb-8">
-        {/* Titelblock */}
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 mb-5">
-          <div className="min-w-0">
-            {email && (
-              <p className="text-[13px] text-[var(--color-stone-muted)] truncate normal-case">
-                {email}
-              </p>
-            )}
-            <h1 className="font-serif text-[28px] md:text-[32px] leading-tight font-medium text-[var(--color-ink)]">
-              Projekte
-            </h1>
+        <div className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8 pt-4 pb-24 md:pb-8">
+          {/* Titelblock */}
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 mb-5">
+            <div className="min-w-0">
+              {email && (
+                <p className="text-[13px] text-[var(--color-stone-muted)] truncate normal-case">
+                  {email}
+                </p>
+              )}
+              <h1 className="font-serif text-[28px] md:text-[32px] leading-tight font-medium text-[var(--color-ink)]">
+                Projekte
+              </h1>
+            </div>
+            <Link
+              to="/projekte/neu"
+              className="hidden md:inline-flex items-center gap-2 min-h-[52px] px-6 bg-[var(--color-brand)] text-[var(--color-paper)] uppercase tracking-[0.14em] text-[13px] font-medium hover:bg-[var(--color-brand-hover)] transition-colors duration-300"
+              style={{ borderRadius: 2, transitionTimingFunction: "cubic-bezier(0.16,1,0.3,1)" }}
+            >
+              <Plus className="size-4" strokeWidth={1.75} />
+              Neuer Auftrag
+            </Link>
           </div>
-          <Link
-            to="/projekte/neu"
-            className="hidden md:inline-flex items-center gap-2 min-h-[52px] px-6 bg-[var(--color-brand)] text-[var(--color-paper)] uppercase tracking-[0.14em] text-[13px] font-medium hover:bg-[var(--color-brand-hover)] transition-colors duration-300"
-            style={{ borderRadius: 2, transitionTimingFunction: "cubic-bezier(0.16,1,0.3,1)" }}
-          >
-            <Plus className="size-4" strokeWidth={1.75} />
-            Neuer Auftrag
-          </Link>
-        </div>
 
-        {/* Suche */}
-        <div className="relative mb-6">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[var(--color-stone-muted)]"
-            strokeWidth={1.5}
-          />
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Projekt oder Kunde suchen"
-            className="w-full min-h-[48px] pl-10 pr-4 bg-[var(--color-paper)] border border-[var(--color-hairline)] text-[15px] text-[var(--color-ink)] placeholder:text-[var(--color-stone-muted)] focus:border-[var(--color-brand)] focus:outline-none transition-colors duration-300"
-            style={{ borderRadius: 2, transitionTimingFunction: "cubic-bezier(0.16,1,0.3,1)" }}
-          />
-        </div>
-
-        {isLoading && <p className="text-[var(--color-stone-muted)]">Lade…</p>}
-        {error && (
-          <p className="text-[var(--color-danger)]">Fehler beim Laden: {(error as Error).message}</p>
-        )}
-
-        {!isLoading && !hasProjects && <EmptyState />}
-        {!isLoading && hasProjects && filtered.length === 0 && (
-          <NoMatches query={q} />
-        )}
-
-        {filtered.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 items-stretch">
-            {filtered.map((p) => (
-              <ProjektCard key={p.id} p={p} />
-            ))}
+          {/* Suche */}
+          <div className="relative mb-6">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[var(--color-stone-muted)]"
+              strokeWidth={1.5}
+            />
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Projekt oder Kunde suchen"
+              className="w-full min-h-[48px] pl-10 pr-4 bg-[var(--color-paper)] border border-[var(--color-hairline)] text-[15px] text-[var(--color-ink)] placeholder:text-[var(--color-stone-muted)] focus:border-[var(--color-brand)] focus:outline-none transition-colors duration-300"
+              style={{ borderRadius: 2, transitionTimingFunction: "cubic-bezier(0.16,1,0.3,1)" }}
+            />
           </div>
-        )}
+
+          {isLoading && <p className="text-[var(--color-stone-muted)]">Lade…</p>}
+          {error && (
+            <p className="text-[var(--color-danger)]">Fehler beim Laden: {(error as Error).message}</p>
+          )}
+
+          {!isLoading && !hasProjects && <EmptyState />}
+          {!isLoading && hasProjects && filtered.length === 0 && (
+            <NoMatches query={q} />
+          )}
+
+          {filtered.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 items-stretch pb-24 md:pb-0">
+              {filtered.map((p) => (
+                <ProjektCard key={p.id} p={p} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Mobile FAB */}
@@ -146,7 +148,7 @@ function ProjekteListe() {
         type="button"
         onClick={() => navigate({ to: "/projekte/neu" })}
         aria-label="Neuer Auftrag"
-        className="md:hidden fixed right-5 z-30 size-14 bg-[var(--color-brand)] text-[var(--color-paper)] flex items-center justify-center active:bg-[var(--color-brand-hover)] border border-[#DDD7CB] rounded-full motion-safe:transition-colors motion-safe:duration-300"
+        className="md:hidden fixed right-5 z-10 size-14 bg-[var(--color-brand)] text-[var(--color-paper)] flex items-center justify-center active:bg-[var(--color-brand-hover)] border border-[#DDD7CB] rounded-full motion-safe:transition-colors motion-safe:duration-300"
         style={{
           bottom: "calc(72px + env(safe-area-inset-bottom))",
           transitionTimingFunction: "cubic-bezier(0.16,1,0.3,1)",
@@ -154,7 +156,7 @@ function ProjekteListe() {
       >
         <Plus className="size-6" strokeWidth={1.75} />
       </button>
-    </div>
+    </>
   );
 }
 
