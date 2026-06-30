@@ -3,6 +3,11 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight, Check, Plus, Trash2, AlertTriangle, AlertOctagon, Loader2 } from "lucide-react";
+
+const WIZARD_SAVE_EVENT = "wizard:save-step";
+function emitWizardSave() {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(WIZARD_SAVE_EVENT));
+}
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
