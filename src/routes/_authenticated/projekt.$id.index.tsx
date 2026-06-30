@@ -281,7 +281,13 @@ function ProjektDetail() {
           <p className="text-base text-destructive">{(projektQ.error as Error).message}</p>
         )}
 
-        {projekt && <KopfDaten projekt={projekt} />}
+        {projekt && projekt.status === "uebergeben" && (
+          <UebergabeHinweis at={projekt.uebergeben_at ?? null} />
+        )}
+
+        {projekt && (
+          <KopfDaten projekt={projekt} onDelete={() => setDeleteProjektOpen(true)} />
+        )}
 
         <section>
           <div className="flex items-baseline justify-between mb-2">
