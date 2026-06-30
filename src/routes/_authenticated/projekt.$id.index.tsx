@@ -112,14 +112,14 @@ function ProjektDetail() {
 
         <section>
           <div className="flex items-baseline justify-between mb-2">
-            <h2 className="text-lg font-bold">Räume</h2>
-            <p className="text-base font-semibold">
-              {erfasst} von {total} erfasst
+            <h2 className="font-serif text-[22px] font-medium">Räume</h2>
+            <p className="text-[13px] text-[var(--color-stone-muted)]">
+              <span className="num-serif">{erfasst}</span> von <span className="num-serif">{total}</span> erfasst
             </p>
           </div>
-          <div className="h-3 bg-muted rounded-full overflow-hidden">
+          <div className="h-[5px] bg-[var(--color-sand-deep)] overflow-hidden">
             <div
-              className="h-full bg-primary transition-all"
+              className="h-full bg-[var(--color-brand)] transition-all"
               style={{ width: `${progressPct}%` }}
             />
           </div>
@@ -154,21 +154,23 @@ function ProjektDetail() {
         </Button>
       </div>
 
-      <div className="fixed left-0 right-0 bottom-16 px-5 py-3 bg-background border-t flex gap-3">
+      <div
+        className="fixed left-0 right-0 bottom-16 md:bottom-0 md:left-[220px] px-4 md:px-8 py-3 bg-[var(--color-paper)] border-t border-[var(--color-hairline)] flex gap-3"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
+      >
         <Button
           variant="outline"
-          className="flex-1 h-14 text-base font-bold border-2"
+          className="flex-1 min-h-[52px] text-[13px] uppercase tracking-[0.14em] font-medium border border-[var(--color-brand)] text-[var(--color-brand)] bg-transparent hover:bg-[color-mix(in_oklab,var(--color-brand)_8%,transparent)] rounded-none"
           onClick={() => navigate({ to: "/projekt/$id/vorschau", params: { id } })}
         >
-          <Eye className="size-5 mr-1" />
+          <Eye className="size-4 mr-2" strokeWidth={1.5} />
           Vorschau
         </Button>
         <Button
-          className="flex-1 h-14 text-base font-bold"
+          className="flex-1 min-h-[52px] text-[13px] uppercase tracking-[0.14em] font-medium bg-[var(--color-brand)] hover:bg-[var(--color-brand-hover)] text-[var(--color-paper)] rounded-none"
           onClick={() => navigate({ to: "/projekt/$id/vorschau", params: { id } })}
         >
-          <Send className="size-5 mr-1" />
-          Übergabe
+          Übergabe →
         </Button>
       </div>
     </div>
