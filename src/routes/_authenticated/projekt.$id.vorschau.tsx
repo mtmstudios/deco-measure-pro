@@ -434,7 +434,10 @@ function FooterActions({
         daten: antwort.uebergabe as any,
       });
       if (error) throw error;
-      await supabase.from("projekt").update({ status: "uebergeben" }).eq("id", projektId);
+      await supabase
+        .from("projekt")
+        .update({ status: "uebergeben", uebergeben_at: new Date().toISOString() })
+        .eq("id", projektId);
     },
     onSuccess: () => toast.success("Übergabe gespeichert (Schnittstelle folgt)."),
     onError: (e: any) => toast.error(e?.message ?? "Fehler bei der Übergabe"),
