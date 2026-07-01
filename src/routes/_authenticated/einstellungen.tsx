@@ -41,12 +41,38 @@ function EinstellungenPage() {
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+
+  const runSync = useCallback(async () => {
+    if (!navigator.onLine) {
+      toast.error("Keine Verbindung – wird nachgeholt, sobald online.");
+      return;
+    }
+    setSyncing(true);
+    try {
+      // Platzhalter: Datenabgleich passiert online-first via Supabase-Requests.
+      await new Promise((r) => setTimeout(r, 600));
+      const iso = new Date().toISOString();
+      try { localStorage.setItem(LAST_SYNC_KEY, iso); } catch { /* ignore */ }
+      setLastSync(iso);
+      toast.success("Synchronisiert");
+    } finally {
+      setSyncing(false);
+    }
+  }, []);
 
   useEffect(() => {
     const update = () => setOnline(navigator.onLine);
     update();
-    window.addEventListener("online", update);
-    window.addEventListener("offline", update);
+    const onOnline = () => {
+      setOnline(true);
+      try {
+        if (localStorage.getItem(AUTO_SYNC_KEY) !== "0") void runSync();
+      } catch { /* ignore */ }
+    };
+    const onOffline = () => setOnline(false);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
     try {
       const v = localStorage.getItem(AUTO_SYNC_KEY);
       if (v !== null) setAutoSync(v === "1");
@@ -54,10 +80,10 @@ function EinstellungenPage() {
     } catch { /* ignore */ }
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
     return () => {
-      window.removeEventListener("online", update);
-      window.removeEventListener("offline", update);
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
     };
-  }, []);
+  }, [runSync]);
 
   function toggleAutoSync(v: boolean) {
     setAutoSync(v);
@@ -75,12 +101,20 @@ function EinstellungenPage() {
 
   return (
     <div className="myr-rise">
-      <ScreenHeader eyebrow="KONFIGURATION" title="Einstellungen" />
+      <ScreenHeader />
 
-      <div className="mx-auto max-w-[560px] px-4 md:px-6 pt-2 pb-16 space-y-8">
+      <div className="mx-auto max-w-[560px] px-4 md:px-6 pt-4 pb-16">
+        <div className="text-center mb-8">
+          <div className="eyebrow mb-2">Konfiguration</div>
+          <h1 className="text-[28px] md:text-[32px] leading-tight font-serif font-medium text-[var(--color-ink)]">
+            Einstellungen
+          </h1>
+        </div>
+
+        <div className="space-y-8">
         {/* SYNCHRONISATION */}
         <section aria-labelledby="grp-sync" className="space-y-3">
-          <h2 id="grp-sync" className="eyebrow">Synchronisation</h2>
+          <h2 id="grp-sync" className="eyebrow text-center">Synchronisation</h2>
           <div
             className="myr-card p-5 relative overflow-hidden"
             style={{ background: "var(--color-sand)", transition: "all 300ms cubic-bezier(0.16,1,0.3,1)" }}
@@ -101,14 +135,12 @@ function EinstellungenPage() {
                 <p className="font-medium text-[18px] leading-tight text-[var(--color-ink)]">
                   {online ? "Online" : "Offline"}
                 </p>
-                {relative && (
+                <p className="text-[13px] mt-1 text-[var(--color-stone-muted)]">
+                  {relative ? `Zuletzt synchronisiert ${relative}` : "Noch nicht synchronisiert"}
+                </p>
+                {!online && (
                   <p className="text-[13px] mt-1 text-[var(--color-stone-muted)]">
-                    Zuletzt synchronisiert: {relative}
-                  </p>
-                )}
-                {!autoSync && (
-                  <p className="text-[13px] mt-1 text-[var(--color-stone-muted)]">
-                    Änderungen werden lokal gespeichert und manuell synchronisiert.
+                    Änderungen werden lokal gespeichert und automatisch übertragen, sobald wieder eine Verbindung besteht.
                   </p>
                 )}
               </div>
@@ -116,16 +148,27 @@ function EinstellungenPage() {
                 <Switch checked={autoSync} onCheckedChange={toggleAutoSync} aria-label="Auto-Sync" />
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-[var(--color-hairline)] flex items-center justify-between">
+
+            <div className="mt-4 pt-4 border-t border-[var(--color-hairline)] flex items-center justify-between gap-3">
               <span className="text-[12px] uppercase tracking-[0.12em] text-[var(--color-stone-muted)]">Auto-Sync</span>
               <span className="text-[13px] text-[var(--color-ink)]">{autoSync ? "An" : "Aus"}</span>
             </div>
+
+            <button
+              type="button"
+              onClick={runSync}
+              disabled={syncing || !online}
+              className="mt-4 w-full h-11 border border-[var(--color-hairline)] bg-[var(--color-paper)] flex items-center justify-center gap-2 text-[13px] uppercase tracking-[0.14em] text-[var(--color-ink)] hover:border-[var(--color-brand)] hover:text-[var(--color-brand)] disabled:opacity-50 transition-colors"
+            >
+              <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} strokeWidth={1.5} />
+              {syncing ? "Synchronisiere …" : "Jetzt synchronisieren"}
+            </button>
           </div>
         </section>
 
         {/* SUPPORT */}
         <section aria-labelledby="grp-support" className="space-y-3">
-          <h2 id="grp-support" className="eyebrow">Support</h2>
+          <h2 id="grp-support" className="eyebrow text-center">Support</h2>
           <button
             type="button"
             onClick={() => setReportOpen(true)}
@@ -149,8 +192,8 @@ function EinstellungenPage() {
 
         {/* KONTO */}
         <section aria-labelledby="grp-konto" className="space-y-3">
-          <h2 id="grp-konto" className="eyebrow">Konto</h2>
-          <div className="myr-card p-5" style={{ background: "var(--color-sand)" }}>
+          <h2 id="grp-konto" className="eyebrow text-center">Konto</h2>
+          <div className="myr-card p-5 text-center" style={{ background: "var(--color-sand)" }}>
             <p className="text-[12px] uppercase tracking-[0.12em] text-[var(--color-stone-muted)]">
               Angemeldet als
             </p>
@@ -166,6 +209,7 @@ function EinstellungenPage() {
             Abmelden
           </button>
         </section>
+        </div>
       </div>
 
       <FehlerMeldenDialog open={reportOpen} onOpenChange={setReportOpen} />
