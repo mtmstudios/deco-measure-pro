@@ -109,7 +109,7 @@ function EinstellungenPage() {
       <ScreenHeader />
 
       <div className="mx-auto max-w-[560px] px-4 md:px-6 pt-4 pb-16">
-        <div className="text-center mb-8">
+        <div className="mb-8">
           <div className="eyebrow mb-2">Konfiguration</div>
           <h1 className="text-[28px] md:text-[32px] leading-tight font-serif font-medium text-[var(--color-ink)]">
             Einstellungen
@@ -119,7 +119,7 @@ function EinstellungenPage() {
         <div className="space-y-8">
         {/* SYNCHRONISATION */}
         <section aria-labelledby="grp-sync" className="space-y-3">
-          <h2 id="grp-sync" className="eyebrow text-center">Synchronisation</h2>
+          <h2 id="grp-sync" className="eyebrow">Synchronisation</h2>
           <div
             className="myr-card p-5 relative overflow-hidden"
             style={{ background: "var(--color-sand)", transition: "all 300ms cubic-bezier(0.16,1,0.3,1)" }}
@@ -185,7 +185,7 @@ function EinstellungenPage() {
 
         {/* SUPPORT */}
         <section aria-labelledby="grp-support" className="space-y-3">
-          <h2 id="grp-support" className="eyebrow text-center">Support</h2>
+          <h2 id="grp-support" className="eyebrow">Support</h2>
           <button
             type="button"
             onClick={() => setReportOpen(true)}
@@ -209,7 +209,7 @@ function EinstellungenPage() {
 
         {/* KONTO */}
         <section aria-labelledby="grp-konto" className="space-y-3">
-          <h2 id="grp-konto" className="eyebrow text-center">Konto</h2>
+          <h2 id="grp-konto" className="eyebrow">Konto</h2>
           <div className="myr-card p-5 text-center" style={{ background: "var(--color-sand)" }}>
             <p className="text-[12px] uppercase tracking-[0.12em] text-[var(--color-stone-muted)]">
               Angemeldet als
