@@ -447,8 +447,11 @@ function FooterActions({
 
   return (
     <div
-      className="fixed left-0 right-0 bottom-16 md:bottom-0 md:left-[220px] z-20 border-t border-[var(--color-hairline)] bg-[var(--color-paper)]"
-      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
+      className="fixed left-0 right-0 bottom-16 md:bottom-0 z-20 border-t border-[var(--color-hairline)] bg-[var(--color-paper)] motion-safe:transition-[left] motion-safe:duration-300 motion-safe:ease-out"
+      style={{
+        paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)",
+        left: "var(--side-nav-width, 0px)",
+      }}
     >
       <div className="mx-auto max-w-[720px] px-4 md:px-6 py-3 space-y-2">
         <div className="grid grid-cols-2 gap-3">

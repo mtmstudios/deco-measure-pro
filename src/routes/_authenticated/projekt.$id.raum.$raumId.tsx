@@ -422,8 +422,11 @@ function RaumWizard() {
       </div>
 
       <nav
-        className="fixed bottom-0 left-0 right-0 z-20 border-t border-[var(--color-hairline)] bg-[var(--color-paper)] md:left-[220px]"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        className="fixed bottom-0 right-0 z-20 border-t border-[var(--color-hairline)] bg-[var(--color-paper)] motion-safe:transition-[left] motion-safe:duration-300 motion-safe:ease-out"
+        style={{
+          paddingBottom: "env(safe-area-inset-bottom)",
+          left: "var(--side-nav-width, 0px)",
+        }}
       >
         <div className="mx-auto max-w-[760px] grid grid-cols-2 gap-3 px-4 py-3">
           <button
