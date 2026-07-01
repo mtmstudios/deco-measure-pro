@@ -108,6 +108,47 @@ export type Database = {
         }
         Relationships: []
       }
+      fehlermeldung: {
+        Row: {
+          benutzer_id: string | null
+          betrieb_id: string | null
+          created_at: string
+          id: string
+          notiz: string
+          route: string | null
+          screenshots: string[]
+          user_agent: string | null
+        }
+        Insert: {
+          benutzer_id?: string | null
+          betrieb_id?: string | null
+          created_at?: string
+          id?: string
+          notiz: string
+          route?: string | null
+          screenshots?: string[]
+          user_agent?: string | null
+        }
+        Update: {
+          benutzer_id?: string | null
+          betrieb_id?: string | null
+          created_at?: string
+          id?: string
+          notiz?: string
+          route?: string | null
+          screenshots?: string[]
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fehlermeldung_betrieb_id_fkey"
+            columns: ["betrieb_id"]
+            isOneToOne: false
+            referencedRelation: "betrieb"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       generierte_position: {
         Row: {
           bezeichnung: string
