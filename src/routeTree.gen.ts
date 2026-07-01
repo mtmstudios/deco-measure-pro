@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedEinstellungenRouteImport } from './routes/_authenticated/einstellungen'
 import { Route as AuthenticatedProjekteIndexRouteImport } from './routes/_authenticated/projekte.index'
 import { Route as AuthenticatedProjekteNeuRouteImport } from './routes/_authenticated/projekte.neu'
 import { Route as AuthenticatedProjektIdIndexRouteImport } from './routes/_authenticated/projekt.$id.index'
@@ -33,6 +34,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedEinstellungenRoute =
+  AuthenticatedEinstellungenRouteImport.update({
+    id: '/einstellungen',
+    path: '/einstellungen',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProjekteIndexRoute =
   AuthenticatedProjekteIndexRouteImport.update({
     id: '/projekte/',
@@ -73,6 +80,7 @@ const AuthenticatedProjektIdRaumRaumIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/projekte/neu': typeof AuthenticatedProjekteNeuRoute
   '/projekte/': typeof AuthenticatedProjekteIndexRoute
   '/projekt/$id/vorschau': typeof AuthenticatedProjektIdVorschauRoute
@@ -83,6 +91,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/projekte/neu': typeof AuthenticatedProjekteNeuRoute
   '/projekte': typeof AuthenticatedProjekteIndexRoute
   '/projekt/$id/vorschau': typeof AuthenticatedProjektIdVorschauRoute
@@ -95,6 +104,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/einstellungen': typeof AuthenticatedEinstellungenRoute
   '/_authenticated/projekte/neu': typeof AuthenticatedProjekteNeuRoute
   '/_authenticated/projekte/': typeof AuthenticatedProjekteIndexRoute
   '/_authenticated/projekt/$id/vorschau': typeof AuthenticatedProjektIdVorschauRoute
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/einstellungen'
     | '/projekte/neu'
     | '/projekte/'
     | '/projekt/$id/vorschau'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/einstellungen'
     | '/projekte/neu'
     | '/projekte'
     | '/projekt/$id/vorschau'
@@ -128,6 +140,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/einstellungen'
     | '/_authenticated/projekte/neu'
     | '/_authenticated/projekte/'
     | '/_authenticated/projekt/$id/vorschau'
@@ -164,6 +177,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/einstellungen': {
+      id: '/_authenticated/einstellungen'
+      path: '/einstellungen'
+      fullPath: '/einstellungen'
+      preLoaderRoute: typeof AuthenticatedEinstellungenRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/projekte/': {
       id: '/_authenticated/projekte/'
@@ -211,6 +231,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedEinstellungenRoute: typeof AuthenticatedEinstellungenRoute
   AuthenticatedProjekteNeuRoute: typeof AuthenticatedProjekteNeuRoute
   AuthenticatedProjekteIndexRoute: typeof AuthenticatedProjekteIndexRoute
   AuthenticatedProjektIdVorschauRoute: typeof AuthenticatedProjektIdVorschauRoute
@@ -220,6 +241,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedEinstellungenRoute: AuthenticatedEinstellungenRoute,
   AuthenticatedProjekteNeuRoute: AuthenticatedProjekteNeuRoute,
   AuthenticatedProjekteIndexRoute: AuthenticatedProjekteIndexRoute,
   AuthenticatedProjektIdVorschauRoute: AuthenticatedProjektIdVorschauRoute,
