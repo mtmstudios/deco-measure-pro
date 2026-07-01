@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronRight, Wifi, WifiOff, LifeBuoy, Upload, Trash2, RefreshCw } from "lucide-react";
+import { ChevronRight, Wifi, WifiOff, LifeBuoy, Upload, Trash2, RefreshCw, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ScreenHeader } from "@/components/screen-header";
@@ -219,6 +219,26 @@ function EinstellungenPage() {
 
 /* ==================== Fehler-Melden Dialog ==================== */
 
+type FileItem = {
+  id: string;
+  name: string;
+  size: number;
+  dataUrl?: string;
+  progress: number; // 0..100
+  status: "loading" | "ready" | "error";
+  error?: string;
+};
+
+const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB pro Datei
+const MAX_TOTAL_BYTES = 15 * 1024 * 1024; // 15 MB gesamt
+const MAX_FILES = 5;
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function FehlerMeldenDialog({
   open,
   onOpenChange,
@@ -227,8 +247,9 @@ function FehlerMeldenDialog({
   onOpenChange: (v: boolean) => void;
 }) {
   const [notiz, setNotiz] = useState("");
-  const [files, setFiles] = useState<{ name: string; dataUrl: string }[]>([]);
+  const [files, setFiles] = useState<FileItem[]>([]);
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -236,36 +257,115 @@ function FehlerMeldenDialog({
       setNotiz("");
       setFiles([]);
       setSending(false);
+      setSendError(null);
     }
   }, [open]);
 
-  async function handleFiles(list: FileList | null) {
+  const totalBytes = files.reduce((sum, f) => sum + (f.status !== "error" ? f.size : 0), 0);
+  const anyLoading = files.some((f) => f.status === "loading");
+
+  function updateFile(id: string, patch: Partial<FileItem>) {
+    setFiles((prev) => prev.map((f) => (f.id === id ? { ...f, ...patch } : f)));
+  }
+
+  function readFile(item: FileItem, file: File) {
+    const reader = new FileReader();
+    reader.onprogress = (ev) => {
+      if (ev.lengthComputable) {
+        updateFile(item.id, { progress: Math.round((ev.loaded / ev.total) * 100) });
+      }
+    };
+    reader.onload = () => {
+      updateFile(item.id, {
+        dataUrl: reader.result as string,
+        progress: 100,
+        status: "ready",
+      });
+    };
+    reader.onerror = () => {
+      updateFile(item.id, {
+        status: "error",
+        error: "Datei konnte nicht gelesen werden.",
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleFiles(list: FileList | null) {
     if (!list) return;
-    const arr = Array.from(list).slice(0, 5 - files.length);
-    const out: { name: string; dataUrl: string }[] = [];
-    for (const f of arr) {
-      if (!f.type.startsWith("image/")) continue;
-      if (f.size > 5 * 1024 * 1024) {
-        toast.error(`${f.name}: max. 5 MB`);
+    const remainingSlots = MAX_FILES - files.length;
+    if (remainingSlots <= 0) {
+      toast.error(`Maximal ${MAX_FILES} Screenshots.`);
+      return;
+    }
+    const incoming = Array.from(list).slice(0, remainingSlots);
+    let runningTotal = totalBytes;
+    const newItems: { item: FileItem; file: File }[] = [];
+
+    for (const f of incoming) {
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const base: FileItem = {
+        id,
+        name: f.name,
+        size: f.size,
+        progress: 0,
+        status: "loading",
+      };
+      if (!f.type.startsWith("image/")) {
+        newItems.push({
+          item: { ...base, status: "error", error: "Nur Bilddateien erlaubt." },
+          file: f,
+        });
         continue;
       }
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(r.result as string);
-        r.onerror = reject;
-        r.readAsDataURL(f);
-      });
-      out.push({ name: f.name, dataUrl });
+      if (f.size > MAX_FILE_BYTES) {
+        newItems.push({
+          item: {
+            ...base,
+            status: "error",
+            error: `Zu groß (${formatBytes(f.size)}). Max. ${formatBytes(MAX_FILE_BYTES)}.`,
+          },
+          file: f,
+        });
+        continue;
+      }
+      if (runningTotal + f.size > MAX_TOTAL_BYTES) {
+        newItems.push({
+          item: {
+            ...base,
+            status: "error",
+            error: `Gesamtlimit ${formatBytes(MAX_TOTAL_BYTES)} überschritten.`,
+          },
+          file: f,
+        });
+        continue;
+      }
+      runningTotal += f.size;
+      newItems.push({ item: base, file: f });
     }
-    setFiles((prev) => [...prev, ...out]);
+
+    setFiles((prev) => [...prev, ...newItems.map((n) => n.item)]);
+    // Startet das Lesen für alle validen Items
+    for (const n of newItems) {
+      if (n.item.status === "loading") readFile(n.item, n.file);
+    }
+  }
+
+  function removeFile(id: string) {
+    setFiles((prev) => prev.filter((f) => f.id !== id));
   }
 
   async function send() {
     if (!notiz.trim()) {
-      toast.error("Bitte eine Notiz eingeben.");
+      setSendError("Bitte eine Notiz eingeben.");
+      return;
+    }
+    if (anyLoading) {
+      setSendError("Bitte warten, bis alle Screenshots geladen sind.");
       return;
     }
     setSending(true);
+    setSendError(null);
     try {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id ?? null;
@@ -278,11 +378,14 @@ function FehlerMeldenDialog({
           .maybeSingle();
         betriebId = benutzer?.betrieb_id ?? null;
       }
+      const validScreens = files
+        .filter((f) => f.status === "ready" && f.dataUrl)
+        .map((f) => f.dataUrl as string);
       const { error } = await supabase.from("fehlermeldung").insert({
         benutzer_id: userId,
         betrieb_id: betriebId,
         notiz: notiz.trim(),
-        screenshots: files.map((f) => f.dataUrl),
+        screenshots: validScreens,
         user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
         route: typeof window !== "undefined" ? window.location.pathname : null,
       });
@@ -291,11 +394,18 @@ function FehlerMeldenDialog({
       onOpenChange(false);
     } catch (e) {
       console.error(e);
-      toast.error("Konnte nicht gesendet werden.");
+      const msg =
+        e instanceof Error && e.message
+          ? e.message
+          : "Der Fehlerbericht konnte nicht gesendet werden. Bitte erneut versuchen.";
+      setSendError(msg);
     } finally {
       setSending(false);
     }
   }
+
+  const readyCount = files.filter((f) => f.status === "ready").length;
+  const canSend = !sending && !anyLoading && notiz.trim().length > 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -313,7 +423,7 @@ function FehlerMeldenDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-6 py-5 space-y-4 max-h-[65vh] overflow-y-auto">
           <div>
             <label className="text-[11px] uppercase tracking-[0.14em] text-[var(--color-stone-muted)] block mb-2">
               Notiz
@@ -328,16 +438,25 @@ function FehlerMeldenDialog({
           </div>
 
           <div>
-            <label className="text-[11px] uppercase tracking-[0.14em] text-[var(--color-stone-muted)] block mb-2">
-              Screenshots
-            </label>
+            <div className="flex items-baseline justify-between mb-2">
+              <label className="text-[11px] uppercase tracking-[0.14em] text-[var(--color-stone-muted)]">
+                Screenshots
+              </label>
+              <span className="text-[11px] text-[var(--color-stone-muted)]">
+                {readyCount}/{MAX_FILES} · {formatBytes(totalBytes)} / {formatBytes(MAX_TOTAL_BYTES)}
+              </span>
+            </div>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-full border border-dashed border-[var(--color-hairline)] py-4 flex flex-col items-center justify-center gap-1 text-[var(--color-stone-muted)] hover:text-[var(--color-ink)] hover:border-[var(--color-brand)] transition-colors rounded-[2px]"
+              disabled={files.length >= MAX_FILES}
+              className="w-full border border-dashed border-[var(--color-hairline)] py-4 flex flex-col items-center justify-center gap-1 text-[var(--color-stone-muted)] hover:text-[var(--color-ink)] hover:border-[var(--color-brand)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-[2px]"
             >
               <Upload className="size-4" strokeWidth={1.5} />
               <span className="text-[13px]">Screenshot aufnehmen / hochladen</span>
+              <span className="text-[11px] text-[var(--color-stone-muted)]">
+                PNG/JPG · max. {formatBytes(MAX_FILE_BYTES)} pro Datei
+              </span>
             </button>
             <input
               ref={fileInputRef}
@@ -350,27 +469,89 @@ function FehlerMeldenDialog({
                 e.target.value = "";
               }}
             />
+
             {files.length > 0 && (
-              <ul className="mt-3 grid grid-cols-4 gap-2">
-                {files.map((f, i) => (
-                  <li key={i} className="relative aspect-square border border-[var(--color-hairline)] overflow-hidden">
-                    <img src={f.dataUrl} alt={f.name} className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))}
-                      className="absolute top-1 right-1 size-6 bg-[var(--color-paper)]/90 border border-[var(--color-hairline)] flex items-center justify-center text-[var(--color-danger)]"
-                      aria-label="Entfernen"
-                    >
-                      <Trash2 className="size-3" strokeWidth={1.5} />
-                    </button>
+              <ul className="mt-3 space-y-2">
+                {files.map((f) => (
+                  <li
+                    key={f.id}
+                    className="border border-[var(--color-hairline)] bg-[var(--color-paper)] rounded-[2px]"
+                    style={{
+                      borderColor:
+                        f.status === "error" ? "var(--color-danger)" : "var(--color-hairline)",
+                    }}
+                  >
+                    <div className="flex items-center gap-3 p-2">
+                      <div className="size-11 shrink-0 border border-[var(--color-hairline)] bg-[var(--color-sand)] flex items-center justify-center overflow-hidden">
+                        {f.status === "ready" && f.dataUrl ? (
+                          <img src={f.dataUrl} alt={f.name} className="w-full h-full object-cover" />
+                        ) : f.status === "error" ? (
+                          <AlertCircle className="size-5 text-[var(--color-danger)]" strokeWidth={1.5} />
+                        ) : (
+                          <Loader2 className="size-5 animate-spin text-[var(--color-stone-muted)]" strokeWidth={1.5} />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="text-[13px] text-[var(--color-ink)] truncate">{f.name}</p>
+                          <span className="text-[11px] text-[var(--color-stone-muted)] shrink-0">
+                            {formatBytes(f.size)}
+                          </span>
+                        </div>
+                        {f.status === "loading" && (
+                          <div className="mt-1.5 h-1 w-full bg-[var(--color-sand)] overflow-hidden">
+                            <div
+                              className="h-full bg-[var(--color-brand)] transition-[width] duration-150"
+                              style={{ width: `${f.progress}%` }}
+                            />
+                          </div>
+                        )}
+                        {f.status === "error" && (
+                          <p className="mt-1 text-[12px] text-[var(--color-danger)]">{f.error}</p>
+                        )}
+                        {f.status === "ready" && (
+                          <p className="mt-1 text-[11px] uppercase tracking-[0.12em] text-[var(--color-stone-muted)]">
+                            Bereit
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(f.id)}
+                        className="size-9 shrink-0 flex items-center justify-center text-[var(--color-stone-muted)] hover:text-[var(--color-danger)] transition-colors"
+                        aria-label={`${f.name} entfernen`}
+                      >
+                        <Trash2 className="size-4" strokeWidth={1.5} />
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
             )}
           </div>
+
+          {sendError && (
+            <div
+              role="alert"
+              className="flex items-start gap-3 p-3 border border-[var(--color-danger)] bg-[var(--color-paper)] rounded-[2px]"
+            >
+              <AlertCircle className="size-4 shrink-0 mt-0.5 text-[var(--color-danger)]" strokeWidth={1.5} />
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-medium text-[var(--color-danger)]">
+                  Senden fehlgeschlagen
+                </p>
+                <p className="text-[12px] text-[var(--color-stone-muted)] mt-0.5 break-words">
+                  {sendError}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="px-6 py-4 border-t border-[var(--color-hairline)] flex items-center justify-end gap-3" style={{ background: "var(--color-sand)" }}>
+        <div
+          className="px-6 py-4 border-t border-[var(--color-hairline)] flex items-center justify-end gap-3"
+          style={{ background: "var(--color-sand)" }}
+        >
           <button
             type="button"
             onClick={() => onOpenChange(false)}
@@ -381,10 +562,11 @@ function FehlerMeldenDialog({
           <button
             type="button"
             onClick={send}
-            disabled={sending || !notiz.trim()}
-            className="h-11 px-5 bg-[var(--color-brand)] text-[var(--color-paper)] text-[13px] uppercase tracking-[0.14em] font-medium hover:bg-[var(--color-brand-hover)] disabled:opacity-50 transition-colors"
+            disabled={!canSend}
+            className="h-11 px-5 bg-[var(--color-brand)] text-[var(--color-paper)] text-[13px] uppercase tracking-[0.14em] font-medium hover:bg-[var(--color-brand-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-2"
           >
-            {sending ? "Senden …" : "Senden →"}
+            {sending && <Loader2 className="size-4 animate-spin" strokeWidth={1.5} />}
+            {sending ? "Senden …" : anyLoading ? "Wird geladen …" : "Senden →"}
           </button>
         </div>
       </DialogContent>
