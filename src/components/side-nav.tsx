@@ -20,6 +20,24 @@ export function SideNav() {
     } catch { /* ignore */ }
   }, []);
 
+  // Sync collapsed state to a CSS variable so fixed elements (Sticky-Footer,
+  // FABs) auf md+ automatisch die passende linke Kante bekommen.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    const apply = () => {
+      const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+      root.style.setProperty(
+        "--side-nav-width",
+        isDesktop ? (collapsed ? "64px" : "220px") : "0px",
+      );
+    };
+    apply();
+    const mql = window.matchMedia("(min-width: 768px)");
+    mql.addEventListener("change", apply);
+    return () => mql.removeEventListener("change", apply);
+  }, [collapsed]);
+
   function toggle() {
     setCollapsed((v) => {
       const next = !v;
