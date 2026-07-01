@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { FolderKanban, RefreshCw } from "lucide-react";
+import { FolderKanban, Settings } from "lucide-react";
 
 const items = [
   { to: "/projekte", label: "Projekte", icon: FolderKanban },
-  { to: "/sync", label: "Sync-Status", icon: RefreshCw },
+  { to: "/einstellungen", label: "Einstellungen", icon: Settings },
 ] as const;
 
 export function BottomNav() {
