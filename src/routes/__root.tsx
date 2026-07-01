@@ -1,4 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import {
   Outlet,
   Link,
@@ -7,12 +9,16 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
+
+// Cache-Version: bei Breaking-Changes am Query-Shape hochzählen, um alte Snapshots zu verwerfen.
+const PERSIST_BUSTER = "v1";
+const PERSIST_KEY = "aufmass-rq-cache";
 
 function NotFoundComponent() {
   return (
@@ -129,22 +135,64 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
 
+  // Persister nur im Browser aufsetzen (SSR hat kein localStorage)
+  const [persister] = useState(() =>
+    typeof window === "undefined"
+      ? null
+      : createSyncStoragePersister({
+          storage: window.localStorage,
+          key: PERSIST_KEY,
+          throttleTime: 1000,
+        }),
+  );
+
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      if (event === "SIGNED_OUT") {
+        // Persistenten Cache beim Logout leeren, damit fremde Nutzer keine Daten sehen
+        try {
+          window.localStorage.removeItem(PERSIST_KEY);
+        } catch {
+          /* noop */
+        }
+        queryClient.clear();
+      } else {
+        queryClient.invalidateQueries();
+      }
     });
     // Offline-Sync starten (idempotent)
     void import("@/lib/offline-sync").then((m) => m.startAutoSync());
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
 
-  return (
-    <QueryClientProvider client={queryClient}>
+  const content = (
+    <>
       <Outlet />
       <Toaster richColors position="top-center" />
-    </QueryClientProvider>
+    </>
+  );
+
+  if (!persister) {
+    return <QueryClientProvider client={queryClient}>{content}</QueryClientProvider>;
+  }
+
+  return (
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister,
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+        buster: PERSIST_BUSTER,
+        dehydrateOptions: {
+          // Nur erfolgreiche Queries persistieren; keine Fehlerzustände zwischenspeichern
+          shouldDehydrateQuery: (q) => q.state.status === "success",
+        },
+      }}
+    >
+      {content}
+    </PersistQueryClientProvider>
   );
 }
 
