@@ -134,28 +134,13 @@ function ProjekteListe() {
     );
   }, [projekte, q, hidden]);
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    toast.success("Abgemeldet");
-  }
-
   const hasProjects =
     !!projekte && projekte.filter((p) => !hidden.has(p.id)).length > 0;
 
   return (
     <>
       <div className="myr-rise">
-        <ScreenHeader
-          right={
-            <button
-              onClick={handleLogout}
-              aria-label="Abmelden"
-              className="size-11 flex items-center justify-center text-[var(--color-stone-muted)] hover:text-[var(--color-ink)]"
-            >
-              <LogOut className="size-5" strokeWidth={1.5} />
-            </button>
-          }
-        />
+        <ScreenHeader />
 
         <div className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8 pt-4 pb-24 md:pb-8">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 mb-5">
