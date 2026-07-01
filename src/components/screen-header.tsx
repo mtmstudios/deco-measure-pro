@@ -23,7 +23,7 @@ export function ScreenHeader({ backTo, backParams, right, title, eyebrow, below 
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
-        <div className="h-14 md:h-16 grid grid-cols-[52px_1fr_auto] items-center gap-2">
+        <div className="h-14 md:h-16 grid grid-cols-[1fr_auto_1fr] md:grid-cols-[52px_1fr_auto] items-center gap-2">
           <div className="flex items-center">
             {backTo ? (
               <Link
