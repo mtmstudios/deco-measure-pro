@@ -1436,9 +1436,43 @@ function Step6({ raumId, projektId }: { raumId: string; projektId: string }) {
             <button
               type="button"
               disabled={hasBlockers}
-              onClick={() => {
-                toast.success("Raum abgeschlossen");
-                navigate({ to: "/projekt/$id", params: { id: projektId } });
+              onClick={async () => {
+                try {
+                  const [{ buildRaumSnapshot, cacheRaumSnapshotLocal }, { enqueueJob }, { drain }] =
+                    await Promise.all([
+                      import("@/lib/raum-snapshot"),
+                      import("@/lib/offline-db"),
+                      import("@/lib/offline-sync"),
+                    ]);
+                  if (navigator.onLine) {
+                    // Online: aktuellen Server-Zustand snapshotten und lokal cachen
+                    const snap = await buildRaumSnapshot(raumId);
+                    await cacheRaumSnapshotLocal(snap);
+                    // Sync-Fallback: ausstehende Änderungen anderer Räume mitnehmen
+                    void drain();
+                    toast.success("Raum abgeschlossen");
+                  } else {
+                    // Offline: letzte bekannte Version aus dem Draft-Cache in die Queue legen
+                    const { getDraft } = await import("@/lib/offline-db");
+                    const draft = await getDraft(raumId);
+                    if (draft) {
+                      await enqueueJob({
+                        kind: "raum_upsert",
+                        payload: draft.data,
+                        raumId,
+                        projektId,
+                      });
+                      toast.success("Wird synchronisiert, sobald wieder online.");
+                    } else {
+                      toast.error("Kein lokaler Stand vorhanden — bitte online abschließen.");
+                      return;
+                    }
+                  }
+                  navigate({ to: "/projekt/$id", params: { id: projektId } });
+                } catch (e) {
+                  const msg = e instanceof Error ? e.message : "Fehler beim Abschließen";
+                  toast.error(msg);
+                }
               }}
               className={cn(
                 "w-full min-h-[52px] inline-flex items-center justify-center gap-2",
