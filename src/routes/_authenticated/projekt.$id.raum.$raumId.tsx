@@ -350,6 +350,19 @@ function RaumWizard() {
       return data;
     },
   });
+
+  // Snapshot des Raums lokal cachen — damit Offline-Abschließen und Offline-Öffnen funktionieren.
+  useEffect(() => {
+    if (!raum) return;
+    (async () => {
+      try {
+        const { buildRaumSnapshot, cacheRaumSnapshotLocal } = await import("@/lib/raum-snapshot");
+        const snap = await buildRaumSnapshot(raumId);
+        await cacheRaumSnapshotLocal(snap);
+      } catch { /* offline oder Netzfehler — ok, letzter Cache bleibt gültig */ }
+    })();
+  }, [raum, raumId]);
+
   const { data: katalog = [] } = useQuery<Catalog[]>({
     queryKey: ["katalog"],
     queryFn: async () => {
