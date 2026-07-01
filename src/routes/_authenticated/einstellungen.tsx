@@ -180,8 +180,8 @@ function EinstellungenPage() {
             )}
           </div>
         </section>
-          </div>
-        </section>
+
+
 
         {/* SUPPORT */}
         <section aria-labelledby="grp-support" className="space-y-3">
