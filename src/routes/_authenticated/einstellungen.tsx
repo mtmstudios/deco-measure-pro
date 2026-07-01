@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { ChevronRight, Wifi, WifiOff, LifeBuoy, X, Upload, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ChevronRight, Wifi, WifiOff, LifeBuoy, Upload, Trash2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ScreenHeader } from "@/components/screen-header";
