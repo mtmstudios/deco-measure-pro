@@ -629,6 +629,7 @@ export type Database = {
     Functions: {
       current_betrieb_id: { Args: never; Returns: string }
       duplicate_raum: { Args: { p_raum_id: string }; Returns: string }
+      upsert_raum_snapshot: { Args: { p: Json }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "mitarbeiter"

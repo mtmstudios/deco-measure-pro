@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/einstellungen")({
 });
 
 const AUTO_SYNC_KEY = "myr.autoSync";
-const LAST_SYNC_KEY = "myr.lastSyncAt";
+
 
 function formatRelative(iso: string | null): string | null {
   if (!iso) return null;
@@ -42,48 +42,41 @@ function EinstellungenPage() {
   const [email, setEmail] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [pending, setPending] = useState(0);
+  const [failed, setFailed] = useState(0);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   const runSync = useCallback(async () => {
     if (!navigator.onLine) {
       toast.error("Keine Verbindung – wird nachgeholt, sobald online.");
       return;
     }
-    setSyncing(true);
-    try {
-      // Platzhalter: Datenabgleich passiert online-first via Supabase-Requests.
-      await new Promise((r) => setTimeout(r, 600));
-      const iso = new Date().toISOString();
-      try { localStorage.setItem(LAST_SYNC_KEY, iso); } catch { /* ignore */ }
-      setLastSync(iso);
-      toast.success("Synchronisiert");
-    } finally {
-      setSyncing(false);
-    }
+    const mod = await import("@/lib/offline-sync");
+    await mod.drain();
   }, []);
 
   useEffect(() => {
-    const update = () => setOnline(navigator.onLine);
-    update();
-    const onOnline = () => {
-      setOnline(true);
-      try {
-        if (localStorage.getItem(AUTO_SYNC_KEY) !== "0") void runSync();
-      } catch { /* ignore */ }
-    };
-    const onOffline = () => setOnline(false);
-    window.addEventListener("online", onOnline);
-    window.addEventListener("offline", onOffline);
+    let unsub: (() => void) | null = null;
+    setOnline(navigator.onLine);
+    void import("@/lib/offline-sync").then((mod) => {
+      unsub = mod.subscribe((state) => {
+        setOnline(state.online);
+        setSyncing(state.syncing);
+        setPending(state.pending);
+        setFailed(state.failed);
+        setLastSync(state.lastSyncAt);
+        setSyncError(state.lastError);
+      });
+    });
     try {
       const v = localStorage.getItem(AUTO_SYNC_KEY);
       if (v !== null) setAutoSync(v === "1");
-      setLastSync(localStorage.getItem(LAST_SYNC_KEY));
     } catch { /* ignore */ }
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
     return () => {
-      window.removeEventListener("online", onOnline);
-      window.removeEventListener("offline", onOffline);
+      unsub?.();
     };
-  }, [runSync]);
+  }, []);
 
   function toggleAutoSync(v: boolean) {
     setAutoSync(v);
@@ -97,7 +90,19 @@ function EinstellungenPage() {
   }
 
   const relative = formatRelative(lastSync);
-  const accent = online ? "var(--color-brand)" : "var(--color-danger)";
+  const accent = !online
+    ? "var(--color-danger)"
+    : pending > 0 || failed > 0
+      ? "var(--color-warning, #C08A2E)"
+      : "var(--color-brand)";
+
+  const statusHeadline = !online
+    ? "Offline"
+    : syncing
+      ? "Synchronisiere …"
+      : pending > 0
+        ? `${pending} Änderung${pending === 1 ? "" : "en"} ausstehend`
+        : "Online";
 
   return (
     <div className="myr-rise">
@@ -133,11 +138,16 @@ function EinstellungenPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-[18px] leading-tight text-[var(--color-ink)]">
-                  {online ? "Online" : "Offline"}
+                  {statusHeadline}
                 </p>
                 <p className="text-[13px] mt-1 text-[var(--color-stone-muted)]">
                   {relative ? `Zuletzt synchronisiert ${relative}` : "Noch nicht synchronisiert"}
                 </p>
+                {failed > 0 && (
+                  <p className="text-[13px] mt-1 text-[var(--color-danger)]">
+                    {failed} Änderung{failed === 1 ? "" : "en"} konnten nicht übertragen werden.
+                  </p>
+                )}
                 {!online && (
                   <p className="text-[13px] mt-1 text-[var(--color-stone-muted)]">
                     Änderungen werden lokal gespeichert und automatisch übertragen, sobald wieder eine Verbindung besteht.
@@ -163,8 +173,15 @@ function EinstellungenPage() {
               <RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} strokeWidth={1.5} />
               {syncing ? "Synchronisiere …" : "Jetzt synchronisieren"}
             </button>
+            {syncError && !syncing && (
+              <p className="mt-3 text-[12px] text-[var(--color-danger)] break-words">
+                Letzter Fehler: {syncError}
+              </p>
+            )}
           </div>
         </section>
+
+
 
         {/* SUPPORT */}
         <section aria-labelledby="grp-support" className="space-y-3">

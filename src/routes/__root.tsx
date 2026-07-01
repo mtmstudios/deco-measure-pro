@@ -135,6 +135,8 @@ function RootComponent() {
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });
+    // Offline-Sync starten (idempotent)
+    void import("@/lib/offline-sync").then((m) => m.startAutoSync());
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
 
