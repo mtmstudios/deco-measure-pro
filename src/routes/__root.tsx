@@ -135,22 +135,64 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
 
+  // Persister nur im Browser aufsetzen (SSR hat kein localStorage)
+  const [persister] = useState(() =>
+    typeof window === "undefined"
+      ? null
+      : createSyncStoragePersister({
+          storage: window.localStorage,
+          key: PERSIST_KEY,
+          throttleTime: 1000,
+        }),
+  );
+
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      if (event === "SIGNED_OUT") {
+        // Persistenten Cache beim Logout leeren, damit fremde Nutzer keine Daten sehen
+        try {
+          window.localStorage.removeItem(PERSIST_KEY);
+        } catch {
+          /* noop */
+        }
+        queryClient.clear();
+      } else {
+        queryClient.invalidateQueries();
+      }
     });
     // Offline-Sync starten (idempotent)
     void import("@/lib/offline-sync").then((m) => m.startAutoSync());
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
 
-  return (
-    <QueryClientProvider client={queryClient}>
+  const content = (
+    <>
       <Outlet />
       <Toaster richColors position="top-center" />
-    </QueryClientProvider>
+    </>
+  );
+
+  if (!persister) {
+    return <QueryClientProvider client={queryClient}>{content}</QueryClientProvider>;
+  }
+
+  return (
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister,
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+        buster: PERSIST_BUSTER,
+        dehydrateOptions: {
+          // Nur erfolgreiche Queries persistieren; keine Fehlerzustände zwischenspeichern
+          shouldDehydrateQuery: (q) => q.state.status === "success",
+        },
+      }}
+    >
+      {content}
+    </PersistQueryClientProvider>
   );
 }
 
