@@ -15,6 +15,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
+import { InstallPrompt } from "@/components/install-prompt";
 
 // Cache-Version: bei Breaking-Changes am Query-Shape hochzählen, um alte Snapshots zu verwerfen.
 const PERSIST_BUSTER = "v1";
