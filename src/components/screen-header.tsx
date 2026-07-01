@@ -38,11 +38,13 @@ export function ScreenHeader({ backTo, backParams, right, title, eyebrow, below 
               <span aria-hidden className="size-11" />
             )}
           </div>
-          <div className="flex justify-center">
+          <div className="flex justify-center md:hidden">
             <Link to="/projekte" aria-label="Zur Projektliste" className="inline-flex">
               <AppLogo height={26} />
             </Link>
           </div>
+          <div aria-hidden className="hidden md:block" />
+
           <div className="flex items-center justify-end min-h-11">{right}</div>
         </div>
         {(title || eyebrow) && (
