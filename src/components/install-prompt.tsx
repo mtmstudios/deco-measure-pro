@@ -175,8 +175,8 @@ function IosInstallSheet({ device, onClose }: { device: Exclude<AppleDevice, nul
           </h2>
           <p className="mt-3 text-[14px] text-[var(--color-stone-muted)] leading-relaxed">
             {isIphone
-              ? "Tippe unten in Safari auf das Teilen-Symbol und wähle „Zum Home-Bildschirm"."
-              : "Tippe oben rechts in Safari auf das Teilen-Symbol neben der Adressleiste und wähle „Zum Home-Bildschirm"."}
+              ? 'Tippe unten in Safari auf das Teilen-Symbol und wähle „Zum Home-Bildschirm".'
+              : 'Tippe oben rechts in Safari auf das Teilen-Symbol neben der Adressleiste und wähle „Zum Home-Bildschirm".'}
           </p>
 
           <ol className="mt-5 space-y-3">
