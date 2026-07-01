@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/einstellungen")({
 });
 
 const AUTO_SYNC_KEY = "myr.autoSync";
-const LAST_SYNC_KEY = "myr.lastSyncAt";
+
 
 function formatRelative(iso: string | null): string | null {
   if (!iso) return null;
