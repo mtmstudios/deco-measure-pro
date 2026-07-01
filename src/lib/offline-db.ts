@@ -10,7 +10,7 @@ const STORE_DRAFT = "raum_draft";
 
 export type QueueJob = {
   id: string;
-  kind: "raum_upsert";
+  kind: "raum_upsert" | "fehlermeldung_insert";
   payload: unknown;
   createdAt: number;
   attempts: number;
