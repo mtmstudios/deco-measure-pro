@@ -40,15 +40,21 @@
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
 
-  --color-paper: #FAF8F3;
-  --color-sand: #F0ECE3;
-  --color-sand-deep: #E9E4D9;
-  --color-ink: #2F312B;
-  --color-brand: #5C5F57;
-  --color-brand-hover: #4C4F48;
-  --color-hairline: #DDD7CB;
-  --color-stone-muted: #9A968C;
+  --color-paper: #FBFBF9;
+  --color-sand: #EAEDE6;
+  --color-sand-deep: #DDE3D8;
+  --color-ink: #262C26;
+  --color-brand: #65665C;
+  --color-brand-hover: #54554C;
+  --color-hairline: #C9D0C6;
+  --color-stone-muted: #7E837A;
   --color-danger: #9A5A4E;
+  --color-sage-mid: #A2AE9A;
+  --color-sage-light: #BAC4B1;
+
+  --font-sans: "Lato", system-ui, -apple-system, sans-serif;
+  --font-serif: "Spectral", Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
 
   --font-sans: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
   --font-serif: "Spectral", Georgia, "Times New Roman", serif;
