@@ -205,7 +205,7 @@ function ProjekteListe() {
         type="button"
         onClick={() => navigate({ to: "/projekte/neu" })}
         aria-label="Neuer Auftrag"
-        className="md:hidden fixed right-5 z-10 size-14 bg-[var(--color-brand)] text-[var(--color-paper)] flex items-center justify-center active:bg-[var(--color-brand-hover)] border border-[#DDD7CB] rounded-full motion-safe:transition-colors motion-safe:duration-300"
+        className="md:hidden fixed right-5 z-10 size-14 bg-[var(--color-brand)] text-[var(--color-paper)] flex items-center justify-center active:bg-[var(--color-brand-hover)] border border-[var(--color-hairline)] rounded-full motion-safe:transition-colors motion-safe:duration-300"
         style={{
           bottom: "calc(72px + env(safe-area-inset-bottom))",
           transitionTimingFunction: EASE,
