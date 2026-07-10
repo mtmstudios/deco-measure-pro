@@ -25,8 +25,8 @@ export interface PreisRaster {
   breiten_cm: number[];
   /** Raster-Obergrenzen Höhe (cm), aufsteigend — Zeilen der Matrix. */
   hoehen_cm: number[];
-  /** matrix[hoeheIndex][breiteIndex] = Preis (EUR, netto). */
-  matrix: number[][];
+  /** matrix[hoeheIndex][breiteIndex] = Preis (EUR). null = nicht lieferbar. */
+  matrix: (number | null)[][];
 }
 
 export interface Preisgruppe {
@@ -48,6 +48,8 @@ export interface Produkt {
   hersteller: string;
   produkt: string;
   modell?: string;
+  /** z. B. "UVP inkl. MwSt." oder "EK netto" — nur Doku, keine Berechnung. */
+  preisbasis?: string;
   preisgruppen: Preisgruppe[];
   zuschlaege?: Zuschlag[];
   mindest_breite_cm?: number;
@@ -63,6 +65,8 @@ export interface Konfiguration {
 }
 
 export interface PreisErgebnis {
+  /** false = diese Breiten-/Höhen-Kombination ist nicht im Preisraster. */
+  lieferbar: boolean;
   grundpreis: number;
   zuschlaege: { name: string; betrag: number }[];
   gesamt: number;
@@ -100,11 +104,22 @@ export function berechnePreis(produkt: Produkt, konfig: Konfiguration): PreisErg
   const hi = rasterIndex(pg.raster.hoehen_cm, h);
   if (bi.ueber || hi.ueber) hinweise.push("Maß über Preisraster — Preis manuell prüfen");
 
-  const grundpreis = pg.raster.matrix[hi.idx]?.[bi.idx];
-  if (grundpreis == null) throw new Error("Kein Preis im Raster gefunden");
-
   const rasterB = pg.raster.breiten_cm[bi.idx];
   const rasterH = pg.raster.hoehen_cm[hi.idx];
+  const grundpreis = pg.raster.matrix[hi.idx]?.[bi.idx];
+  if (grundpreis == null) {
+    return {
+      lieferbar: false,
+      grundpreis: 0,
+      zuschlaege: [],
+      gesamt: 0,
+      raster: { breite_cm: rasterB, hoehe_cm: rasterH },
+      hinweise: [
+        ...hinweise,
+        `Nicht lieferbar: Breite ${rasterB} cm × Höhe ${rasterH} cm ist im Preisraster nicht vorgesehen (max. Höhe für diese Breite beachten).`,
+      ],
+    };
+  }
 
   const zuschlaege: { name: string; betrag: number }[] = [];
   for (const code of konfig.zuschlaege ?? []) {
@@ -119,6 +134,7 @@ export function berechnePreis(produkt: Produkt, konfig: Konfiguration): PreisErg
 
   const gesamt = round(grundpreis + zuschlaege.reduce((a, z) => a + z.betrag, 0));
   return {
+    lieferbar: true,
     grundpreis: round(grundpreis),
     zuschlaege,
     gesamt,
@@ -127,46 +143,4 @@ export function berechnePreis(produkt: Produkt, konfig: Konfiguration): PreisErg
   };
 }
 
-/**
- * BEISPIEL-Produkt zum sofortigen Testen des Konfigurators (Werte = Platzhalter!).
- * Sobald die echten MHZ-Plissee-Matrizen extrahiert sind, ersetzen/erweitern.
- */
-export const MHZ_PLISSEE_BEISPIEL: Produkt = {
-  hersteller: "MHZ",
-  produkt: "Plissee",
-  modell: "Beispiel VS2",
-  mindest_breite_cm: 30,
-  mindest_hoehe_cm: 30,
-  preisgruppen: [
-    {
-      code: "PG1",
-      name: "Stoffgruppe 1",
-      raster: {
-        breiten_cm: [80, 100, 120, 140],
-        hoehen_cm: [100, 140, 180],
-        matrix: [
-          [120, 135, 150, 165],
-          [140, 158, 176, 194],
-          [160, 180, 200, 220],
-        ],
-      },
-    },
-    {
-      code: "PG2",
-      name: "Stoffgruppe 2",
-      raster: {
-        breiten_cm: [80, 100, 120, 140],
-        hoehen_cm: [100, 140, 180],
-        matrix: [
-          [150, 168, 186, 204],
-          [174, 196, 218, 240],
-          [198, 224, 250, 276],
-        ],
-      },
-    },
-  ],
-  zuschlaege: [
-    { code: "MOTOR", name: "Motorantrieb", typ: "fix", wert: 180 },
-    { code: "SONDERFARBE", name: "Sonderfarbe Schiene", typ: "prozent", wert: 15 },
-  ],
-};
+// Echte Produktdaten (MHZ Plissee 11-8120) liegen in ./preis-data.ts.
