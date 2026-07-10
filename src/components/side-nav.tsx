@@ -127,5 +127,3 @@ export function SideNav() {
   );
 }
 
-// Suppress unused-import lint for Ruler if ever needed later.
-export const _Ruler = Ruler;
