@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { FolderKanban, Settings, PanelLeftClose, PanelLeft, Ruler, Calculator } from "lucide-react";
+import { FolderKanban, Settings, PanelLeftClose, PanelLeft, Calculator } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppLogo } from "@/components/app-logo";
 
