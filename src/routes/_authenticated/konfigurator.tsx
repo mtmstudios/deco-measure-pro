@@ -4,7 +4,7 @@ import { AlertTriangle } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { NumberInput } from "@/components/number-input";
 import { berechnePreis } from "@/lib/preis-engine";
-import { MHZ_PLISSEE_11_8120 } from "@/lib/preis-data";
+import { MHZ_PRODUKTE } from "@/lib/preis-data";
 
 export const Route = createFileRoute("/_authenticated/konfigurator")({
   head: () => ({ meta: [{ title: "Sonnenschutz-Konfigurator · Aufmaß-App" }] }),
@@ -19,11 +19,20 @@ const eur = new Intl.NumberFormat("de-DE", {
 });
 
 function KonfiguratorPage() {
-  const produkt = MHZ_PLISSEE_11_8120;
-  const [preisgruppe, setPreisgruppe] = useState(produkt.preisgruppen[0].code);
+  const [produktIdx, setProduktIdx] = useState(0);
+  const produkt = MHZ_PRODUKTE[produktIdx];
+  const [preisgruppe, setPreisgruppe] = useState(MHZ_PRODUKTE[0].preisgruppen[0].code);
   const [breite, setBreite] = useState<number>(100);
   const [hoehe, setHoehe] = useState<number>(140);
   const [zuschlaege, setZuschlaege] = useState<string[]>([]);
+
+  // Beim Produktwechsel Preisgruppe + Zuschläge zurücksetzen
+  // (Plissee-Codes wie "PGA" existieren bei Duette nicht).
+  const wechsleProdukt = (idx: number) => {
+    setProduktIdx(idx);
+    setPreisgruppe(MHZ_PRODUKTE[idx].preisgruppen[0].code);
+    setZuschlaege([]);
+  };
 
   const ergebnis = useMemo(() => {
     try {
@@ -59,6 +68,23 @@ function KonfiguratorPage() {
         </section>
 
         <section className="space-y-4">
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              Produkt
+            </span>
+            <select
+              value={produktIdx}
+              onChange={(e) => wechsleProdukt(Number(e.target.value))}
+              className="min-h-[52px] w-full bg-[var(--color-paper)] border border-[var(--color-hairline)] px-4 text-[17px] focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none"
+            >
+              {MHZ_PRODUKTE.map((p, i) => (
+                <option key={i} value={i}>
+                  {p.produkt} · {p.modell}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <label className="flex flex-col gap-1">
             <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               Stoffgruppe
