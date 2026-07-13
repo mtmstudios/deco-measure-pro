@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { FolderKanban, Settings } from "lucide-react";
+import { FolderKanban, Settings, Calculator } from "lucide-react";
 
 const items = [
   { to: "/projekte", label: "Projekte", icon: FolderKanban },
+  { to: "/konfigurator", label: "Konfigurator", icon: Calculator },
   { to: "/einstellungen", label: "Einstellungen", icon: Settings },
 ] as const;
 
@@ -12,7 +13,7 @@ export function BottomNav() {
       className="md:hidden fixed bottom-0 inset-x-0 z-20 bg-[var(--color-paper)] border-t border-[var(--color-hairline)]"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="grid grid-cols-2">
+      <ul className="grid grid-cols-3">
         {items.map(({ to, label, icon: Icon }) => (
           <li key={to} className="relative">
             <Link
