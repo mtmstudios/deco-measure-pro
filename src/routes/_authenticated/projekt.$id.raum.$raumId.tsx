@@ -1088,8 +1088,8 @@ function HeizkoerperRow({ row, onChange }: { row: any; onChange: () => void }) {
       )}
       {typ === "platte" && (
         <div className="grid grid-cols-2 gap-2">
-          <NumberInput label="Höhe" suffix="cm" value={hoehe} onChange={(e) => setHoehe(e.target.value)} onBlur={() => save()} />
-          <NumberInput label="Breite" suffix="cm" value={breite} onChange={(e) => setBreite(e.target.value)} onBlur={() => save()} />
+          <NumberInput label="Höhe" suffix="cm" step={10} min={0} value={hoehe} onChange={(e) => setHoehe(e.target.value)} onBlur={() => save()} />
+          <NumberInput label="Breite" suffix="cm" step={10} min={0} value={breite} onChange={(e) => setBreite(e.target.value)} onBlur={() => save()} />
         </div>
       )}
       {typ === "rohr" && (
