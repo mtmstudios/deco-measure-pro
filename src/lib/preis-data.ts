@@ -12,6 +12,7 @@ import type { Produkt } from "./preis-engine";
 export const MHZ_PLISSEE_11_8120: Produkt = {
   hersteller: "MHZ",
   produkt: "Plissee",
+  gruppen_label: "Stoffgruppe",
   modell: "11-8120 (gespannt)",
   preisbasis: "UVP inkl. MwSt.",
   mindest_breite_cm: 20,
@@ -170,6 +171,7 @@ export const MHZ_PLISSEE_11_8120: Produkt = {
 export const MHZ_DUETTE_11_8120: Produkt = {
   hersteller: "MHZ",
   produkt: "Duette Wabenplissee",
+  gruppen_label: "Wabengruppe",
   modell: "11-8120 (gespannt)",
   preisbasis: "UVP inkl. MwSt.",
   mindest_breite_cm: 20,

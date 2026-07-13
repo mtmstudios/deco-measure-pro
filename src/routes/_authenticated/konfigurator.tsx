@@ -87,7 +87,7 @@ function KonfiguratorPage() {
 
           <label className="flex flex-col gap-1">
             <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              Stoffgruppe
+              {produkt.gruppen_label ?? "Preisgruppe"}
             </span>
             <select
               value={preisgruppe}

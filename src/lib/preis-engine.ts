@@ -50,6 +50,8 @@ export interface Produkt {
   modell?: string;
   /** z. B. "UVP inkl. MwSt." oder "EK netto" — nur Doku, keine Berechnung. */
   preisbasis?: string;
+  /** Beschriftung der Gruppen-Auswahl im UI, z. B. "Stoffgruppe" / "Wabengruppe". */
+  gruppen_label?: string;
   preisgruppen: Preisgruppe[];
   zuschlaege?: Zuschlag[];
   mindest_breite_cm?: number;
