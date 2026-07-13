@@ -51,25 +51,28 @@ export const NumberInput = React.forwardRef<HTMLInputElement, Props>(function Nu
     el.dispatchEvent(new Event("input", { bubbles: true }));
   };
 
+  const showInlineSuffix = suffix && !hasStepper;
+  const labelWithSuffix = label && suffix && hasStepper ? `${label} (${suffix})` : label;
+
   return (
-    <label className="flex flex-col gap-1">
-      {label && (
+    <label className="flex flex-col gap-1 min-w-0">
+      {labelWithSuffix && (
         <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-          {label}
+          {labelWithSuffix}
         </span>
       )}
-      <div className="relative flex items-stretch">
+      <div className="relative flex items-stretch min-w-0">
         {hasStepper && (
           <button
             type="button"
             onClick={() => nudge(-1)}
             aria-label={`Minus ${step}`}
-            className="min-h-[52px] w-12 shrink-0 border border-r-0 border-[var(--color-hairline)] bg-[var(--color-sand)] text-[var(--color-ink)] active:bg-[var(--color-sand-deep)] flex items-center justify-center"
+            className="min-h-[52px] w-10 shrink-0 border border-r-0 border-[var(--color-hairline)] bg-[var(--color-sand)] text-[var(--color-ink)] active:bg-[var(--color-sand-deep)] flex items-center justify-center"
           >
-            <Minus className="size-5" strokeWidth={2} />
+            <Minus className="size-4" strokeWidth={2} />
           </button>
         )}
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
           <input
             ref={setRef}
             inputMode={isInteger ? "numeric" : "decimal"}
@@ -77,15 +80,14 @@ export const NumberInput = React.forwardRef<HTMLInputElement, Props>(function Nu
             value={value}
             onChange={onChange}
             className={cn(
-              "min-h-[52px] w-full bg-[var(--color-paper)] border border-[var(--color-hairline)] px-4 text-[22px] font-serif tabular-nums focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none",
-              hasStepper && "text-center",
-              suffix && !hasStepper && "pr-14",
-              suffix && hasStepper && "pr-12",
+              "min-h-[52px] w-full min-w-0 bg-[var(--color-paper)] border border-[var(--color-hairline)] text-[20px] font-serif tabular-nums focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none",
+              hasStepper ? "text-center px-1" : "px-4",
+              showInlineSuffix && "pr-14",
               className,
             )}
             {...rest}
           />
-          {suffix && (
+          {showInlineSuffix && (
             <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[13px] font-medium text-[var(--color-stone-muted)]">
               {suffix}
             </span>
@@ -96,9 +98,9 @@ export const NumberInput = React.forwardRef<HTMLInputElement, Props>(function Nu
             type="button"
             onClick={() => nudge(1)}
             aria-label={`Plus ${step}`}
-            className="min-h-[52px] w-12 shrink-0 border border-l-0 border-[var(--color-hairline)] bg-[var(--color-sand)] text-[var(--color-ink)] active:bg-[var(--color-sand-deep)] flex items-center justify-center"
+            className="min-h-[52px] w-10 shrink-0 border border-l-0 border-[var(--color-hairline)] bg-[var(--color-sand)] text-[var(--color-ink)] active:bg-[var(--color-sand-deep)] flex items-center justify-center"
           >
-            <Plus className="size-5" strokeWidth={2} />
+            <Plus className="size-4" strokeWidth={2} />
           </button>
         )}
       </div>
