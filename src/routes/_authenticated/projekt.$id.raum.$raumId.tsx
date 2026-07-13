@@ -598,9 +598,9 @@ function Step1({ raum }: { raum: any }) {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <NumberInput label="Länge" suffix="cm" value={laenge} onChange={(e) => setLaenge(e.target.value)} />
-          <NumberInput label="Breite" suffix="cm" value={breite} onChange={(e) => setBreite(e.target.value)} />
-          <NumberInput label="Raumhöhe" suffix="cm" value={hoehe} onChange={(e) => setHoehe(e.target.value)} />
+          <NumberInput label="Länge" suffix="cm" step={10} min={0} value={laenge} onChange={(e) => setLaenge(e.target.value)} />
+          <NumberInput label="Breite" suffix="cm" step={10} min={0} value={breite} onChange={(e) => setBreite(e.target.value)} />
+          <NumberInput label="Raumhöhe" suffix="cm" step={10} min={0} value={hoehe} onChange={(e) => setHoehe(e.target.value)} />
           <TextField label="Etage" value={etage} onChange={setEtage} placeholder="z. B. EG, 1. OG" />
         </div>
 
@@ -705,8 +705,8 @@ function TeilflaecheRow({ row, onChange }: { row: any; onChange: () => void }) {
         <DeleteIconButton onConfirm={del} label="Sonderfläche löschen" description="Diese Sonderfläche wird entfernt." />
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <NumberInput label="Länge" suffix="cm" value={l} onChange={(e) => setL(e.target.value)} onBlur={() => save()} />
-        <NumberInput label="Breite" suffix="cm" value={b} onChange={(e) => setB(e.target.value)} onBlur={() => save()} />
+        <NumberInput label="Länge" suffix="cm" step={10} min={0} value={l} onChange={(e) => setL(e.target.value)} onBlur={() => save()} />
+        <NumberInput label="Breite" suffix="cm" step={10} min={0} value={b} onChange={(e) => setB(e.target.value)} onBlur={() => save()} />
       </div>
       <div className="space-y-1">
         <FieldLabel>Wirkt auf</FieldLabel>
@@ -846,9 +846,9 @@ function OeffnungRow({ row, onChange }: { row: any; onChange: () => void }) {
         <DeleteIconButton onConfirm={del} label="Öffnung löschen" description="Diese Öffnung wird entfernt." />
       </div>
       <div className="grid grid-cols-3 gap-2">
-        <NumberInput label="Breite" suffix="cm" value={b} onChange={(e) => setB(e.target.value)} onBlur={save} />
-        <NumberInput label="Höhe" suffix="cm" value={h} onChange={(e) => setH(e.target.value)} onBlur={save} />
-        <NumberInput label="Anzahl" value={anzahl} onChange={(e) => setAnzahl(e.target.value)} onBlur={save} />
+        <NumberInput label="Breite" suffix="cm" step={10} min={0} value={b} onChange={(e) => setB(e.target.value)} onBlur={save} />
+        <NumberInput label="Höhe" suffix="cm" step={10} min={0} value={h} onChange={(e) => setH(e.target.value)} onBlur={save} />
+        <NumberInput label="Anzahl" step={1} integer min={0} value={anzahl} onChange={(e) => setAnzahl(e.target.value)} onBlur={save} />
       </div>
       <div>
         <ToggleRow
@@ -889,6 +889,9 @@ function OeffnungRow({ row, onChange }: { row: any; onChange: () => void }) {
           <NumberInput
             label="Leibungstiefe"
             suffix="cm"
+            step={1}
+            integer
+            min={0}
             value={leibungTiefe}
             onChange={(e) => setLeibungTiefe(e.target.value)}
             onBlur={save}
@@ -1078,9 +1081,9 @@ function HeizkoerperRow({ row, onChange }: { row: any; onChange: () => void }) {
 
       {typ === "rippe" && (
         <div className="grid grid-cols-3 gap-2">
-          <NumberInput label="Höhe" suffix="cm" value={hoehe} onChange={(e) => setHoehe(e.target.value)} onBlur={() => save()} />
-          <NumberInput label="Tiefe" suffix="cm" value={tiefe} onChange={(e) => setTiefe(e.target.value)} onBlur={() => save()} />
-          <NumberInput label="Rippen" value={rippen} onChange={(e) => setRippen(e.target.value)} onBlur={() => save()} />
+          <NumberInput label="Höhe" suffix="cm" step={10} min={0} value={hoehe} onChange={(e) => setHoehe(e.target.value)} onBlur={() => save()} />
+          <NumberInput label="Tiefe" suffix="cm" step={1} integer min={0} value={tiefe} onChange={(e) => setTiefe(e.target.value)} onBlur={() => save()} />
+          <NumberInput label="Rippen" step={1} integer min={0} value={rippen} onChange={(e) => setRippen(e.target.value)} onBlur={() => save()} />
         </div>
       )}
       {typ === "platte" && (
