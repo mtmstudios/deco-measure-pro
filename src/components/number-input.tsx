@@ -67,7 +67,7 @@ export const NumberInput = React.forwardRef<HTMLInputElement, Props>(function Nu
             type="button"
             onClick={() => nudge(-1)}
             aria-label={`Minus ${step}`}
-            className="min-h-[52px] w-10 shrink-0 border border-r-0 border-[var(--color-hairline)] bg-[var(--color-sand)] text-[var(--color-ink)] active:bg-[var(--color-sand-deep)] flex items-center justify-center"
+            className="min-h-[52px] w-9 sm:w-10 shrink-0 border border-r-0 border-[var(--color-hairline)] bg-[var(--color-sand)] text-[var(--color-ink)] active:bg-[var(--color-sand-deep)] flex items-center justify-center"
           >
             <Minus className="size-4" strokeWidth={2} />
           </button>
