@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { setRaumLeistung, type RaumLeistungRow } from "@/lib/raum-leistung";
 import { RaumGrundrissCard } from "@/components/raum-grundriss";
 import { GeometrieEditor } from "@/components/geometrie-editor";
+import { RaumSkizze } from "@/components/raum-skizze";
 import { ScreenHeader } from "@/components/screen-header";
 
 const WIZARD_SAVE_EVENT = "wizard:save-step";
@@ -577,6 +578,11 @@ function Step1({ raum }: { raum: any }) {
 
   return (
     <div className="space-y-7">
+      <section className="space-y-3">
+        <SectionTitle optional>Raum skizzieren</SectionTitle>
+        <RaumSkizze raumId={raum.id} initial={(raum as any).geometrie ?? null} />
+      </section>
+
       <section className="space-y-4">
         <SectionTitle>Raumdaten</SectionTitle>
 

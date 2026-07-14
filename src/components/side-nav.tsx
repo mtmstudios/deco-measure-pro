@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { FolderKanban, Settings, PanelLeftClose, PanelLeft, Calculator, PencilRuler } from "lucide-react";
+import { FolderKanban, Settings, PanelLeftClose, PanelLeft, Calculator } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppLogo } from "@/components/app-logo";
 
@@ -9,10 +9,7 @@ type NavGroup = { label: string; items: NavItem[] };
 const groups: NavGroup[] = [
   {
     label: "Aufmaß",
-    items: [
-      { to: "/projekte", label: "Projekte", icon: FolderKanban },
-      { to: "/skizze", label: "Raum-Skizze", icon: PencilRuler },
-    ],
+    items: [{ to: "/projekte", label: "Projekte", icon: FolderKanban }],
   },
   {
     label: "Angebot",
