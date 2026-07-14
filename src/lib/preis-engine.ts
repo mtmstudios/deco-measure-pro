@@ -35,13 +35,15 @@ export interface Preisgruppe {
   raster: PreisRaster;
 }
 
-export type ZuschlagTyp = "fix" | "prozent" | "pro_m2";
+export type ZuschlagTyp = "fix" | "prozent" | "pro_m2" | "hoehe_tabelle";
 
 export interface Zuschlag {
   code: string;
   name: string;
   typ: ZuschlagTyp;
   wert: number;
+  /** Nur bei typ "hoehe_tabelle": Preis je Höhen-Raster (parallel zu raster.hoehen_cm). */
+  hoehen_werte?: number[];
 }
 
 export interface Produkt {
@@ -131,6 +133,7 @@ export function berechnePreis(produkt: Produkt, konfig: Konfiguration): PreisErg
     if (z.typ === "fix") betrag = z.wert;
     else if (z.typ === "prozent") betrag = (grundpreis * z.wert) / 100;
     else if (z.typ === "pro_m2") betrag = z.wert * ((rasterB * rasterH) / 10000);
+    else if (z.typ === "hoehe_tabelle") betrag = z.hoehen_werte?.[hi.idx] ?? 0;
     zuschlaege.push({ name: z.name, betrag: round(betrag) });
   }
 

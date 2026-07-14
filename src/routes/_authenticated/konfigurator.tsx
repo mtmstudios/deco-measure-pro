@@ -142,7 +142,9 @@ function KonfiguratorPage() {
                           ? eur.format(z.wert)
                           : z.typ === "prozent"
                             ? `${z.wert} %`
-                            : `${eur.format(z.wert)}/m²`}
+                            : z.typ === "hoehe_tabelle"
+                              ? `ab ${eur.format(z.wert)}`
+                              : `${eur.format(z.wert)}/m²`}
                       </span>
                     </label>
                   );
