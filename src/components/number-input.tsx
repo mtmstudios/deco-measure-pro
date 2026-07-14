@@ -80,7 +80,7 @@ export const NumberInput = React.forwardRef<HTMLInputElement, Props>(function Nu
             value={value}
             onChange={onChange}
             className={cn(
-              "min-h-[52px] w-full min-w-0 bg-[var(--color-paper)] border border-[var(--color-hairline)] text-[20px] font-serif tabular-nums focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none",
+              "min-h-[52px] w-full min-w-0 bg-[var(--color-paper)] border border-[var(--color-hairline)] text-[18px] sm:text-[20px] font-serif tabular-nums focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none",
               hasStepper ? "text-center px-1" : "px-4",
               showInlineSuffix && "pr-14",
               className,
