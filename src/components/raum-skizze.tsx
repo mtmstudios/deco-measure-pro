@@ -136,6 +136,27 @@ export function RaumSkizze({ raumId, initial }: { raumId: string; initial: RaumG
     setActiveEdge(null);
   };
 
+  const centroid = useMemo(() => {
+    if (!points.length) return { x: 50, y: 50 };
+    return {
+      x: points.reduce((s, p) => s + p.x, 0) / points.length,
+      y: points.reduce((s, p) => s + p.y, 0) / points.length,
+    };
+  }, [points]);
+
+  // Nach außen (vom Raum weg) zeigende Normale einer Wand — für Labels neben der Wand.
+  const outward = (a: Pt, b: Pt) => {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const L = Math.hypot(dx, dy) || 1;
+    let nx = -dy / L;
+    let ny = dx / L;
+    const mx = (a.x + b.x) / 2;
+    const my = (a.y + b.y) / 2;
+    if ((mx - centroid.x) * nx + (my - centroid.y) * ny < 0) { nx = -nx; ny = -ny; }
+    return { nx, ny };
+  };
+
   const calc = useMemo(() => {
     if (!closed || lengths.length !== edges.length || lengths.some((l) => !l || l <= 0)) return null;
     const coords: Pt[] = [{ x: 0, y: 0 }];
@@ -215,7 +236,7 @@ export function RaumSkizze({ raumId, initial }: { raumId: string; initial: RaumG
         {vorhanden > 0 && !closed && !points.length ? ` Bereits erfasst: ${vorhanden} Wandabschnitte.` : ""}
       </p>
 
-      <div className="border border-[var(--color-hairline)] bg-[var(--color-paper)]">
+      <div className="relative border border-[var(--color-hairline)] bg-[var(--color-paper)]">
         <svg ref={svgRef} viewBox={`0 0 ${VB} ${VB}`} className="w-full aspect-square touch-none select-none" onPointerDown={handleTap}>
           {Array.from({ length: 9 }, (_, i) => (i + 1) * 10).map((g) => (
             <g key={g}>
@@ -235,19 +256,20 @@ export function RaumSkizze({ raumId, initial }: { raumId: string; initial: RaumG
             const [a, b] = edges[f.edge] ?? [{ x: 0, y: 0 }, { x: 0, y: 0 }];
             const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1;
             const ux = dx / L, uy = dy / L; // entlang Wand
-            const nx = -uy, ny = ux; // senkrecht
+            const nx = -uy, ny = ux; // senkrecht (Ticks kreuzen die Wand beidseitig)
             const cx = a.x + f.t * dx, cy = a.y + f.t * dy;
+            const ow = outward(a, b); // Label nach außen, weg von der Wand
             const bcm = Number(f.breite), wl = lengths[f.edge];
             const half = bcm > 0 && wl > 0 ? Math.min(0.46, bcm / 2 / wl) * L : 3;
             const tk = 2.6;
             const tick = (px: number, py: number) => (
-              <line x1={px - nx * tk} y1={py - ny * tk} x2={px + nx * tk} y2={py + ny * tk} stroke="var(--color-ink)" strokeWidth={0.9} strokeLinecap="round" />
+              <line x1={px - nx * tk} y1={py - ny * tk} x2={px + nx * tk} y2={py + ny * tk} stroke="var(--color-ink)" strokeWidth={1.1} strokeLinecap="round" />
             );
             return (
               <g key={`f${k}`}>
                 {tick(cx - ux * half, cy - uy * half)}
                 {tick(cx + ux * half, cy + uy * half)}
-                <text x={cx + nx * 6} y={cy + ny * 6} textAnchor="middle" fontSize={3.6}
+                <text x={cx + ow.nx * 7} y={cy + ow.ny * 7 + 1} textAnchor="middle" fontSize={3.6}
                   fill="var(--color-stone-muted)" style={{ fontVariantNumeric: "tabular-nums" }}>
                   {(f.breite || "?") + "/" + (f.hoehe || "?")}
                 </text>
@@ -255,21 +277,44 @@ export function RaumSkizze({ raumId, initial }: { raumId: string; initial: RaumG
             );
           })}
 
-          {closed && edges.map(([a, b], i) => {
-            const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-            return (
-              <g key={`l${i}`} onPointerDown={(e) => { e.stopPropagation(); if (!fensterModus) setActiveEdge(i); }}>
-                <rect x={mx - 8} y={my - 3.4} width={16} height={6.8} rx={1.5} fill="var(--color-paper)" stroke="var(--color-hairline)" strokeWidth={0.3} />
-                <text x={mx} y={my + 1.9} textAnchor="middle" fontSize={4} fill="var(--color-ink)" style={{ fontVariantNumeric: "tabular-nums" }}>
-                  {lengths[i] ? `${lengths[i]}` : "?"}
-                </text>
-              </g>
-            );
-          })}
           {points.map((p, i) => (
             <circle key={i} cx={p.x} cy={p.y} r={i === 0 && firstClosable ? 2.4 : 1.6} fill={i === 0 && firstClosable ? "var(--color-brand)" : "var(--color-ink)"} />
           ))}
         </svg>
+
+        {/* Editierbare Maß-Labels als HTML-Overlay (Prozent-Position → skaliert sauber) */}
+        {closed && (
+          <div className="absolute inset-0 pointer-events-none">
+            {edges.map(([a, b], i) => {
+              const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+              const o = outward(a, b);
+              const lx = mx + o.nx * 8.5, ly = my + o.ny * 8.5;
+              return (
+                <input
+                  key={i}
+                  type="number"
+                  inputMode="numeric"
+                  value={lengths[i] || ""}
+                  placeholder="?"
+                  aria-label={`Länge Wand ${i + 1}`}
+                  onFocus={() => setActiveEdge(i)}
+                  onChange={(e) => setLengths((ls) => ls.map((l, j) => (j === i ? Number(e.target.value) : l)))}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className="absolute pointer-events-auto text-center tabular-nums text-[13px] text-[var(--color-ink)] bg-[var(--color-paper)] outline-none"
+                  style={{
+                    left: `${lx}%`,
+                    top: `${ly}%`,
+                    transform: "translate(-50%, -50%)",
+                    width: 46,
+                    height: 26,
+                    borderRadius: 2,
+                    border: `1px solid var(--color-${activeEdge === i ? "brand" : "hairline"})`,
+                  }}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="flex gap-3">
