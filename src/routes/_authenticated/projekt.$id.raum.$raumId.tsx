@@ -845,7 +845,7 @@ function OeffnungRow({ row, onChange }: { row: any; onChange: () => void }) {
         </div>
         <DeleteIconButton onConfirm={del} label="Öffnung löschen" description="Diese Öffnung wird entfernt." />
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         <NumberInput label="Breite" suffix="cm" step={10} min={0} value={b} onChange={(e) => setB(e.target.value)} onBlur={save} />
         <NumberInput label="Höhe" suffix="cm" step={10} min={0} value={h} onChange={(e) => setH(e.target.value)} onBlur={save} />
         <NumberInput label="Anzahl" step={1} integer min={0} value={anzahl} onChange={(e) => setAnzahl(e.target.value)} onBlur={save} />
