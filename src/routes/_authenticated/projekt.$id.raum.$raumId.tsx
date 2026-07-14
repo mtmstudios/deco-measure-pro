@@ -609,6 +609,9 @@ function Step1({ raum }: { raum: any }) {
           <NumberInput label="Raumhöhe" suffix="cm" step={10} min={0} value={hoehe} onChange={(e) => setHoehe(e.target.value)} />
           <TextField label="Etage" value={etage} onChange={setEtage} placeholder="z. B. EG, 1. OG" />
         </div>
+        <p className="text-[12px] text-[var(--color-stone-muted)]">
+          <strong>Raumhöhe</strong> ist immer nötig. <strong>Länge × Breite</strong> nur, wenn du den Raum oben <em>nicht</em> skizzierst — die Wandmaße aus der Skizze werden sonst automatisch verwendet.
+        </p>
 
         <div className="space-y-2">
           <FieldLabel>Deckentyp</FieldLabel>
@@ -633,10 +636,17 @@ function Step1({ raum }: { raum: any }) {
         </div>
       </section>
 
-      <section className="space-y-3">
-        <SectionTitle optional>Geometrie für Raumlevel</SectionTitle>
-        <GeometrieEditor raumId={raum.id} initial={(raum as any).geometrie ?? null} />
-      </section>
+      <details className="border-t border-[var(--color-hairline)] pt-3">
+        <summary className="cursor-pointer select-none text-[13px] font-semibold uppercase tracking-[0.06em] text-[var(--color-stone-muted)]">
+          Maße manuell bearbeiten (optional)
+        </summary>
+        <p className="text-[12px] text-[var(--color-stone-muted)] pt-2">
+          Nur nötig, wenn du <em>nicht</em> skizzierst oder gespeicherte Wandmaße nachträglich korrigieren willst. Sonst reicht die Skizze oben.
+        </p>
+        <div className="pt-4">
+          <GeometrieEditor raumId={raum.id} initial={(raum as any).geometrie ?? null} />
+        </div>
+      </details>
 
       <section className="space-y-3">
         <SectionTitle optional>Sonderflächen</SectionTitle>
