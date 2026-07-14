@@ -67,7 +67,7 @@ export const NumberInput = React.forwardRef<HTMLInputElement, Props>(function Nu
             type="button"
             onClick={() => nudge(-1)}
             aria-label={`Minus ${step}`}
-            className="min-h-[52px] w-10 shrink-0 border border-r-0 border-[var(--color-hairline)] bg-[var(--color-sand)] text-[var(--color-ink)] active:bg-[var(--color-sand-deep)] flex items-center justify-center"
+            className="min-h-[52px] w-9 sm:w-10 shrink-0 border border-r-0 border-[var(--color-hairline)] bg-[var(--color-sand)] text-[var(--color-ink)] active:bg-[var(--color-sand-deep)] flex items-center justify-center"
           >
             <Minus className="size-4" strokeWidth={2} />
           </button>
@@ -80,7 +80,7 @@ export const NumberInput = React.forwardRef<HTMLInputElement, Props>(function Nu
             value={value}
             onChange={onChange}
             className={cn(
-              "min-h-[52px] w-full min-w-0 bg-[var(--color-paper)] border border-[var(--color-hairline)] text-[20px] font-serif tabular-nums focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none",
+              "min-h-[52px] w-full min-w-0 bg-[var(--color-paper)] border border-[var(--color-hairline)] text-[18px] sm:text-[20px] font-serif tabular-nums focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none",
               hasStepper ? "text-center px-1" : "px-4",
               showInlineSuffix && "pr-14",
               className,
@@ -98,7 +98,7 @@ export const NumberInput = React.forwardRef<HTMLInputElement, Props>(function Nu
             type="button"
             onClick={() => nudge(1)}
             aria-label={`Plus ${step}`}
-            className="min-h-[52px] w-10 shrink-0 border border-l-0 border-[var(--color-hairline)] bg-[var(--color-sand)] text-[var(--color-ink)] active:bg-[var(--color-sand-deep)] flex items-center justify-center"
+            className="min-h-[52px] w-9 sm:w-10 shrink-0 border border-l-0 border-[var(--color-hairline)] bg-[var(--color-sand)] text-[var(--color-ink)] active:bg-[var(--color-sand-deep)] flex items-center justify-center"
           >
             <Plus className="size-4" strokeWidth={2} />
           </button>
