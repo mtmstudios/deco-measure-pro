@@ -188,7 +188,7 @@ function ProjekteListe() {
           {!isLoading && hasProjects && filtered.length === 0 && <NoMatches query={q} />}
 
           {filtered.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 items-stretch pb-24 md:pb-0">
+            <div className="myr-stagger grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 items-stretch pb-24 md:pb-0">
               {filtered.map((p) => (
                 <ProjektSwipeCard
                   key={p.id}
