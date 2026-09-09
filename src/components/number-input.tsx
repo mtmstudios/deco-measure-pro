@@ -33,6 +33,8 @@ export const NumberInput = React.forwardRef<HTMLInputElement, Props>(function Nu
   const isInteger = integer ?? (step != null && Number.isInteger(step));
   const hasStepper = typeof step === "number" && step > 0;
 
+  const [pulse, setPulse] = React.useState(false);
+
   const nudge = (dir: 1 | -1) => {
     if (!hasStepper) return;
     const current = parseNum(value) ?? parseNum(innerRef.current?.value) ?? 0;
@@ -49,7 +51,14 @@ export const NumberInput = React.forwardRef<HTMLInputElement, Props>(function Nu
     )?.set;
     setter?.call(el, String(next));
     el.dispatchEvent(new Event("input", { bubbles: true }));
+    // Feines haptisches + visuelles Feedback
+    try {
+      navigator.vibrate?.(8);
+    } catch { /* ignore */ }
+    setPulse(true);
+    window.setTimeout(() => setPulse(false), 160);
   };
+
 
   const showInlineSuffix = suffix && !hasStepper;
   const labelWithSuffix = label && suffix && hasStepper ? `${label} (${suffix})` : label;
