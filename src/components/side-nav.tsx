@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { FolderKanban, Settings, PanelLeftClose, PanelLeft, Calculator } from "lucide-react";
+import { FolderKanban, Settings, ChevronLeft, ChevronRight, Calculator } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppLogo } from "@/components/app-logo";
 
@@ -74,9 +74,23 @@ export function SideNav() {
 
   return (
     <aside
-      className="hidden md:flex md:flex-col shrink-0 border-r border-[var(--color-hairline)] bg-[var(--color-paper)] sticky top-0 h-screen transition-[width] duration-300 ease-out"
+      className="hidden md:flex md:flex-col shrink-0 border-r border-[var(--color-hairline)] bg-[var(--color-paper)] sticky top-0 h-screen transition-[width] duration-300 ease-out relative"
       style={{ width: collapsed ? 64 : 220 }}
     >
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label={collapsed ? "Seitenleiste einblenden" : "Seitenleiste einklappen"}
+        aria-pressed={collapsed}
+        title={collapsed ? "Einblenden" : "Einklappen"}
+        className="absolute -right-3 top-1/2 -translate-y-1/2 z-30 flex items-center justify-center size-6 rounded-full border border-[var(--color-hairline)] bg-[var(--color-paper)] text-[var(--color-stone-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-sand)] shadow-sm transition-colors"
+      >
+        {collapsed ? (
+          <ChevronRight className="size-3.5" strokeWidth={1.75} />
+        ) : (
+          <ChevronLeft className="size-3.5" strokeWidth={1.75} />
+        )}
+      </button>
       <Link
         to="/projekte"
         aria-label="Zur Projektliste"
@@ -103,25 +117,8 @@ export function SideNav() {
         ))}
       </nav>
 
-      <div className="border-t border-[var(--color-hairline)] px-2 py-2 space-y-1">
+      <div className="border-t border-[var(--color-hairline)] px-2 py-2">
         <ul className="space-y-1">{bottomItems.map(renderItem)}</ul>
-        <button
-          type="button"
-          onClick={toggle}
-          aria-label={collapsed ? "Seitenleiste einblenden" : "Seitenleiste einklappen"}
-          aria-pressed={collapsed}
-          title={collapsed ? "Einblenden" : "Einklappen"}
-          className={`w-full flex items-center ${collapsed ? "justify-center px-0" : "gap-3 px-4"} h-11 text-[12px] uppercase tracking-[0.12em] text-[var(--color-stone-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-sand)] rounded-[2px] transition-colors`}
-        >
-          {collapsed ? (
-            <PanelLeft className="size-4 shrink-0" strokeWidth={1.5} />
-          ) : (
-            <>
-              <PanelLeftClose className="size-4 shrink-0" strokeWidth={1.5} />
-              <span>Einklappen</span>
-            </>
-          )}
-        </button>
       </div>
     </aside>
   );
