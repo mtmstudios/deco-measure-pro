@@ -19,7 +19,7 @@ type Props = {
 export function ScreenHeader({ backTo, backParams, right, title, eyebrow, below }: Props) {
   return (
     <header
-      className="sticky top-0 z-10 bg-[var(--color-paper)] border-b border-[var(--color-hairline)]"
+      className="sticky top-0 z-10 bg-[var(--color-paper)]/95 backdrop-blur-[6px] border-b border-[var(--color-hairline)] shadow-[0_10px_24px_-24px_rgba(38,44,38,0.9)]"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">

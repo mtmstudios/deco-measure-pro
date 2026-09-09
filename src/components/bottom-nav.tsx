@@ -10,7 +10,7 @@ const items = [
 export function BottomNav() {
   return (
     <nav
-      className="md:hidden fixed bottom-0 inset-x-0 z-20 bg-[var(--color-paper)] border-t border-[var(--color-hairline)]"
+      className="md:hidden fixed bottom-0 inset-x-0 z-20 bg-[var(--color-paper)]/95 backdrop-blur-[6px] border-t border-[var(--color-hairline)] shadow-[0_-10px_24px_-24px_rgba(38,44,38,0.9)]"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ul className="grid grid-cols-3">
@@ -25,12 +25,16 @@ export function BottomNav() {
                 <>
                   <span
                     aria-hidden
-                    className="absolute top-0 left-6 right-6 h-[2px] bg-[var(--color-brand)] transition-opacity"
-                    style={{ opacity: isActive ? 1 : 0 }}
+                    className="myr-nav-indicator absolute top-0 left-6 right-6 h-[2px] bg-[var(--color-brand)]"
+                    style={{
+                      opacity: isActive ? 1 : 0,
+                      transform: isActive ? "scaleX(1)" : "scaleX(0.3)",
+                    }}
                   />
-                  <Icon className="size-5" strokeWidth={1.5} />
+                  <Icon className="myr-nav-icon size-5" strokeWidth={1.5} />
                   <span className="text-[11px] font-medium">{label}</span>
                 </>
+
               )}
             </Link>
           </li>

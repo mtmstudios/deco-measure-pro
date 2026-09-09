@@ -312,7 +312,7 @@ function ProjektDetail() {
           </div>
         </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+        <div className="myr-stagger grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           {raeumeQ.isLoading && (
             <p className="text-base text-muted-foreground">Lade Räume…</p>
           )}

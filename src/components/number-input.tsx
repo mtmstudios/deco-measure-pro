@@ -33,6 +33,8 @@ export const NumberInput = React.forwardRef<HTMLInputElement, Props>(function Nu
   const isInteger = integer ?? (step != null && Number.isInteger(step));
   const hasStepper = typeof step === "number" && step > 0;
 
+  const [pulse, setPulse] = React.useState(false);
+
   const nudge = (dir: 1 | -1) => {
     if (!hasStepper) return;
     const current = parseNum(value) ?? parseNum(innerRef.current?.value) ?? 0;
@@ -49,7 +51,14 @@ export const NumberInput = React.forwardRef<HTMLInputElement, Props>(function Nu
     )?.set;
     setter?.call(el, String(next));
     el.dispatchEvent(new Event("input", { bubbles: true }));
+    // Feines haptisches + visuelles Feedback
+    try {
+      navigator.vibrate?.(8);
+    } catch { /* ignore */ }
+    setPulse(true);
+    window.setTimeout(() => setPulse(false), 160);
   };
+
 
   const showInlineSuffix = suffix && !hasStepper;
   const labelWithSuffix = label && suffix && hasStepper ? `${label} (${suffix})` : label;
@@ -80,11 +89,13 @@ export const NumberInput = React.forwardRef<HTMLInputElement, Props>(function Nu
             value={value}
             onChange={onChange}
             className={cn(
-              "min-h-[52px] w-full min-w-0 bg-[var(--color-paper)] border border-[var(--color-hairline)] text-[18px] sm:text-[20px] font-serif tabular-nums focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none",
+              "min-h-[52px] w-full min-w-0 bg-[var(--color-paper)] border border-[var(--color-hairline)] text-[18px] sm:text-[20px] font-serif tabular-nums focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none motion-safe:transition-[transform,border-color,background-color] motion-safe:duration-150",
               hasStepper ? "text-center px-1" : "px-4",
               showInlineSuffix && "pr-14",
+              pulse && "motion-safe:scale-[1.04] bg-[var(--color-sand)]",
               className,
             )}
+
             {...rest}
           />
           {showInlineSuffix && (
