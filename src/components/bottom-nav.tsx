@@ -25,12 +25,16 @@ export function BottomNav() {
                 <>
                   <span
                     aria-hidden
-                    className="absolute top-0 left-6 right-6 h-[2px] bg-[var(--color-brand)] transition-opacity"
-                    style={{ opacity: isActive ? 1 : 0 }}
+                    className="myr-nav-indicator absolute top-0 left-6 right-6 h-[2px] bg-[var(--color-brand)]"
+                    style={{
+                      opacity: isActive ? 1 : 0,
+                      transform: isActive ? "scaleX(1)" : "scaleX(0.3)",
+                    }}
                   />
-                  <Icon className="size-5" strokeWidth={1.5} />
+                  <Icon className="myr-nav-icon size-5" strokeWidth={1.5} />
                   <span className="text-[11px] font-medium">{label}</span>
                 </>
+
               )}
             </Link>
           </li>
