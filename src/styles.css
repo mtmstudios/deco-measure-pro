@@ -188,10 +188,10 @@
 }
 
 @keyframes myr-rise {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.myr-rise { animation: myr-rise 480ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.myr-rise { animation: myr-rise 260ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 
 @keyframes myr-collapse {
   from { opacity: 0; transform: translateY(-4px); }
@@ -224,65 +224,53 @@
       transform 130ms var(--ease-quick);
   }
 
-  /* Druck-Feedback: alles Antippbare gibt spürbar nach */
+  /* Druck-Feedback: nur Bedienelemente, sehr dezent */
   button:not(:disabled):active,
-  a:active,
-  summary:active,
   [role="button"]:active,
   .pill:active {
-    transform: scale(0.972);
+    transform: scale(0.99);
   }
 
-  /* Karten heben sich beim Zeigen leicht an (nur mit echtem Hover) */
+  /* Karten: nur feine Farb-/Schattenreaktion, kein Anheben */
   @media (hover: hover) and (pointer: fine) {
     .myr-card {
       transition:
-        transform 260ms var(--ease-myr),
-        box-shadow 260ms var(--ease-myr),
-        border-color 260ms var(--ease-myr);
+        box-shadow 220ms var(--ease-myr),
+        border-color 220ms var(--ease-myr);
     }
     .myr-card:hover {
-      transform: translateY(-2px);
       border-color: var(--color-sage-mid);
-      box-shadow: 0 8px 24px -14px rgba(38, 44, 38, 0.35);
+      box-shadow: 0 6px 18px -16px rgba(38, 44, 38, 0.4);
     }
   }
 
-  /* Gestaffelter Auftritt für Listen/Grids: <div class="myr-stagger"> */
+  /* Ruhiger Auftritt für Listen/Grids: nur Einblenden, kein Springen */
   .myr-stagger > * {
-    animation: myr-rise 460ms var(--ease-myr) both;
+    animation: myr-fade 260ms var(--ease-myr) both;
   }
-  .myr-stagger > *:nth-child(1) { animation-delay: 20ms; }
-  .myr-stagger > *:nth-child(2) { animation-delay: 60ms; }
-  .myr-stagger > *:nth-child(3) { animation-delay: 100ms; }
-  .myr-stagger > *:nth-child(4) { animation-delay: 140ms; }
-  .myr-stagger > *:nth-child(5) { animation-delay: 180ms; }
-  .myr-stagger > *:nth-child(6) { animation-delay: 220ms; }
-  .myr-stagger > *:nth-child(7) { animation-delay: 250ms; }
-  .myr-stagger > *:nth-child(n + 8) { animation-delay: 280ms; }
+  .myr-stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .myr-stagger > *:nth-child(2) { animation-delay: 30ms; }
+  .myr-stagger > *:nth-child(3) { animation-delay: 60ms; }
+  .myr-stagger > *:nth-child(4) { animation-delay: 90ms; }
+  .myr-stagger > *:nth-child(n + 5) { animation-delay: 110ms; }
 
   /* Aktiver Navigationspunkt: Indikator wächst aus der Mitte */
   .myr-nav-indicator {
     transform-origin: center;
     transition:
-      transform 320ms var(--ease-myr),
-      opacity 220ms var(--ease-myr);
-  }
-
-  .myr-nav-icon {
-    transition: transform 280ms var(--ease-myr);
-  }
-  [data-status="active"] .myr-nav-icon {
-    transform: translateY(-1px) scale(1.08);
+      transform 280ms var(--ease-myr),
+      opacity 200ms var(--ease-myr);
   }
 }
 
-/* Sanfter Seitenwechsel */
-@keyframes myr-page-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+@keyframes myr-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
-.myr-page { animation: myr-page-in 320ms var(--ease-myr, cubic-bezier(0.16, 1, 0.3, 1)) both; }
+
+/* Sanfter Seitenwechsel: reines Überblenden */
+.myr-page { animation: myr-fade 220ms var(--ease-myr, cubic-bezier(0.16, 1, 0.3, 1)) both; }
+
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }

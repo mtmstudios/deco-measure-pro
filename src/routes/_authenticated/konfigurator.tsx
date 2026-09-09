@@ -60,17 +60,18 @@ function KonfiguratorPage() {
         eyebrow="Preis-Engine"
         title="Sonnenschutz-Konfigurator"
       />
-      <div className="mx-auto max-w-[720px] px-4 md:px-6 lg:px-8 py-6 space-y-6">
-        <section>
-          <p className="text-[13px] text-[var(--color-stone-muted)]">
-            {produkt.hersteller} {produkt.modell} · {produkt.preisbasis}
-          </p>
-        </section>
+      <div className="myr-page mx-auto max-w-[720px] px-4 md:px-6 lg:px-8 py-6 space-y-5 pb-28">
+        <section className="myr-card p-5 space-y-4">
+          <div className="space-y-1">
+            <p className="eyebrow">Produkt</p>
+            <p className="text-[13px] text-[var(--color-stone-muted)]">
+              {produkt.hersteller} {produkt.modell} · {produkt.preisbasis}
+            </p>
+          </div>
 
-        <section className="space-y-4">
           <label className="flex flex-col gap-1">
             <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              Produkt
+              Modell
             </span>
             <select
               value={produktIdx}
@@ -101,7 +102,10 @@ function KonfiguratorPage() {
               ))}
             </select>
           </label>
+        </section>
 
+        <section className="myr-card p-5 space-y-4">
+          <p className="eyebrow">Maße</p>
           <div className="grid grid-cols-2 gap-3">
             <NumberInput
               label="Breite"
@@ -116,72 +120,75 @@ function KonfiguratorPage() {
               onChange={(e) => setHoehe(Number(e.target.value.replace(",", ".")))}
             />
           </div>
-
-          {produkt.zuschlaege && produkt.zuschlaege.length > 0 && (
-            <fieldset className="space-y-2">
-              <legend className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground mb-2">
-                Zuschläge
-              </legend>
-              <div className="space-y-2">
-                {produkt.zuschlaege.map((z) => {
-                  const checked = zuschlaege.includes(z.code);
-                  return (
-                    <label
-                      key={z.code}
-                      className="flex items-center gap-3 min-h-[52px] px-4 border border-[var(--color-hairline)] bg-[var(--color-paper)] cursor-pointer hover:border-[var(--color-brand)]"
-                    >
-                      <input
-                        type="checkbox"
-                        className="size-5 accent-[var(--color-brand)]"
-                        checked={checked}
-                        onChange={() => toggleZuschlag(z.code)}
-                      />
-                      <span className="flex-1 text-[15px]">{z.name}</span>
-                      <span className="text-[13px] tabular-nums text-[var(--color-stone-muted)]">
-                        {z.typ === "fix"
-                          ? eur.format(z.wert)
-                          : z.typ === "prozent"
-                            ? `${z.wert} %`
-                            : z.typ === "hoehe_tabelle"
-                              ? `ab ${eur.format(z.wert)}`
-                              : `${eur.format(z.wert)}/m²`}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            </fieldset>
+          {ergebnis && (
+            <p className="text-[13px] text-[var(--color-stone-muted)]">
+              Verwendetes Raster{" "}
+              <span className="num-serif text-[var(--color-ink)]">
+                {ergebnis.raster.breite_cm} × {ergebnis.raster.hoehe_cm} cm
+              </span>
+            </p>
           )}
         </section>
 
-        {ergebnis && (
-          <section className="border border-[var(--color-hairline)] bg-[var(--color-sand)] p-5 space-y-4">
-            <div className="flex justify-between items-baseline">
-              <span className="text-[13px] text-[var(--color-stone-muted)]">
-                Verwendetes Raster
-              </span>
-              <span className="text-[15px] font-serif tabular-nums">
-                {ergebnis.raster.breite_cm} × {ergebnis.raster.hoehe_cm} cm
-              </span>
+        {produkt.zuschlaege && produkt.zuschlaege.length > 0 && (
+          <section className="myr-card p-5 space-y-3">
+            <p className="eyebrow">Zuschläge</p>
+            <div className="divide-y divide-[var(--color-hairline)] border-y border-[var(--color-hairline)]">
+              {produkt.zuschlaege.map((z) => {
+                const checked = zuschlaege.includes(z.code);
+                return (
+                  <label
+                    key={z.code}
+                    className="flex items-center gap-3 min-h-[52px] cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      className="size-5 accent-[var(--color-brand)]"
+                      checked={checked}
+                      onChange={() => toggleZuschlag(z.code)}
+                    />
+                    <span className="flex-1 text-[15px]">{z.name}</span>
+                    <span className="text-[13px] tabular-nums text-[var(--color-stone-muted)]">
+                      {z.typ === "fix"
+                        ? eur.format(z.wert)
+                        : z.typ === "prozent"
+                          ? `${z.wert} %`
+                          : z.typ === "hoehe_tabelle"
+                            ? `ab ${eur.format(z.wert)}`
+                            : `${eur.format(z.wert)}/m²`}
+                    </span>
+                  </label>
+                );
+              })}
             </div>
+          </section>
+        )}
+
+        {ergebnis && (
+          <section className="myr-card p-5 space-y-3 bg-[var(--color-sand)]">
+            <p className="eyebrow">Preis</p>
 
             {ergebnis.lieferbar ? (
               <>
-                <div className="flex justify-between items-baseline">
-                  <span className="text-[15px]">Grundpreis</span>
-                  <span className="text-[17px] font-serif tabular-nums">
-                    {eur.format(ergebnis.grundpreis)}
-                  </span>
-                </div>
-
-                {ergebnis.zuschlaege.map((z, i) => (
-                  <div key={i} className="flex justify-between items-baseline">
-                    <span className="text-[15px]">{z.name}</span>
-                    <span className="text-[15px] tabular-nums">
-                      + {eur.format(z.betrag)}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-[15px]">Grundpreis</span>
+                    <span className="text-[17px] font-serif tabular-nums">
+                      {eur.format(ergebnis.grundpreis)}
                     </span>
                   </div>
-                ))}
+
+                  {ergebnis.zuschlaege.map((z, i) => (
+                    <div key={i} className="flex justify-between items-baseline">
+                      <span className="text-[15px] text-[var(--color-stone-muted)]">
+                        {z.name}
+                      </span>
+                      <span className="text-[15px] tabular-nums text-[var(--color-stone-muted)]">
+                        + {eur.format(z.betrag)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
 
                 <div className="pt-3 border-t border-[var(--color-hairline)] flex justify-between items-baseline">
                   <span className="text-[17px] font-bold">Gesamt</span>
@@ -216,6 +223,7 @@ function KonfiguratorPage() {
           </section>
         )}
       </div>
+
     </>
   );
 }
