@@ -199,6 +199,92 @@
 }
 .myr-collapse { animation: myr-collapse 300ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 
+/* ——— Motion-Layer: feine, hochwertige Mikro-Interaktionen ——————————— */
+
+:root {
+  --ease-myr: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-quick: cubic-bezier(0.22, 0.9, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a,
+  button,
+  summary,
+  [role="button"],
+  .pill,
+  input,
+  select,
+  textarea {
+    transition:
+      background-color 200ms var(--ease-myr),
+      color 200ms var(--ease-myr),
+      border-color 200ms var(--ease-myr),
+      box-shadow 240ms var(--ease-myr),
+      opacity 200ms var(--ease-myr),
+      transform 130ms var(--ease-quick);
+  }
+
+  /* Druck-Feedback: alles Antippbare gibt spürbar nach */
+  button:not(:disabled):active,
+  a:active,
+  summary:active,
+  [role="button"]:active,
+  .pill:active {
+    transform: scale(0.972);
+  }
+
+  /* Karten heben sich beim Zeigen leicht an (nur mit echtem Hover) */
+  @media (hover: hover) and (pointer: fine) {
+    .myr-card {
+      transition:
+        transform 260ms var(--ease-myr),
+        box-shadow 260ms var(--ease-myr),
+        border-color 260ms var(--ease-myr);
+    }
+    .myr-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--color-sage-mid);
+      box-shadow: 0 8px 24px -14px rgba(38, 44, 38, 0.35);
+    }
+  }
+
+  /* Gestaffelter Auftritt für Listen/Grids: <div class="myr-stagger"> */
+  .myr-stagger > * {
+    animation: myr-rise 460ms var(--ease-myr) both;
+  }
+  .myr-stagger > *:nth-child(1) { animation-delay: 20ms; }
+  .myr-stagger > *:nth-child(2) { animation-delay: 60ms; }
+  .myr-stagger > *:nth-child(3) { animation-delay: 100ms; }
+  .myr-stagger > *:nth-child(4) { animation-delay: 140ms; }
+  .myr-stagger > *:nth-child(5) { animation-delay: 180ms; }
+  .myr-stagger > *:nth-child(6) { animation-delay: 220ms; }
+  .myr-stagger > *:nth-child(7) { animation-delay: 250ms; }
+  .myr-stagger > *:nth-child(n + 8) { animation-delay: 280ms; }
+
+  /* Aktiver Navigationspunkt: Indikator wächst aus der Mitte */
+  .myr-nav-indicator {
+    transform-origin: center;
+    transition:
+      transform 320ms var(--ease-myr),
+      opacity 220ms var(--ease-myr);
+  }
+
+  .myr-nav-icon {
+    transition: transform 280ms var(--ease-myr);
+  }
+  [data-status="active"] .myr-nav-icon {
+    transform: translateY(-1px) scale(1.08);
+  }
+}
+
+/* Sanfter Seitenwechsel */
+@keyframes myr-page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.myr-page { animation: myr-page-in 320ms var(--ease-myr, cubic-bezier(0.16, 1, 0.3, 1)) both; }
+
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
