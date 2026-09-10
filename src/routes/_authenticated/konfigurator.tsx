@@ -18,12 +18,25 @@ const eur = new Intl.NumberFormat("de-DE", {
   maximumFractionDigits: 2,
 });
 
+/** Standard-Schienenfarben MHZ (im Preis enthalten). */
+const SCHIENENFARBEN = ["Weiß", "Silber", "Anthrazit", "Schwarz", "Bronze"];
+
+/** Maß-Eingabe als cm parsen — akzeptiert Komma und Punkt (z. B. "94,4"). */
+const parseCm = (s: string): number => {
+  const n = Number(String(s).replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+};
+
 function KonfiguratorPage() {
   const [produktIdx, setProduktIdx] = useState(0);
   const produkt = MHZ_PRODUKTE[produktIdx];
   const [preisgruppe, setPreisgruppe] = useState(MHZ_PRODUKTE[0].preisgruppen[0].code);
-  const [breite, setBreite] = useState<number>(100);
-  const [hoehe, setHoehe] = useState<number>(140);
+  // Maße als Rohstring halten, sonst wird beim Tippen von "94," sofort zu 94 geparst
+  // und das Komma verschwindet (→ "944" statt "94,4").
+  const [breite, setBreite] = useState("100");
+  const [hoehe, setHoehe] = useState("140");
+  const [anzahl, setAnzahl] = useState("1");
+  const [schienenfarbe, setSchienenfarbe] = useState(SCHIENENFARBEN[0]);
   const [zuschlaege, setZuschlaege] = useState<string[]>([]);
 
   // Beim Produktwechsel Preisgruppe + Zuschläge zurücksetzen
@@ -38,14 +51,17 @@ function KonfiguratorPage() {
     try {
       return berechnePreis(produkt, {
         preisgruppe,
-        breite_cm: Number.isFinite(breite) ? breite : 0,
-        hoehe_cm: Number.isFinite(hoehe) ? hoehe : 0,
+        breite_cm: parseCm(breite),
+        hoehe_cm: parseCm(hoehe),
         zuschlaege,
       });
     } catch {
       return null;
     }
   }, [produkt, preisgruppe, breite, hoehe, zuschlaege]);
+
+  const menge = Math.max(1, Math.round(parseCm(anzahl)) || 1);
+  const gesamtMenge = ergebnis?.lieferbar ? ergebnis.gesamt * menge : 0;
 
   const toggleZuschlag = (code: string) => {
     setZuschlaege((prev) =>
@@ -102,6 +118,23 @@ function KonfiguratorPage() {
               ))}
             </select>
           </label>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              Schienenfarbe
+            </span>
+            <select
+              value={schienenfarbe}
+              onChange={(e) => setSchienenfarbe(e.target.value)}
+              className="min-h-[52px] w-full bg-[var(--color-paper)] border border-[var(--color-hairline)] px-4 text-[17px] focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none"
+            >
+              {SCHIENENFARBEN.map((f) => (
+                <option key={f} value={f}>
+                  {f}
+                </option>
+              ))}
+            </select>
+          </label>
         </section>
 
         <section className="myr-card p-5 space-y-4">
@@ -110,14 +143,24 @@ function KonfiguratorPage() {
             <NumberInput
               label="Breite"
               suffix="cm"
-              value={Number.isFinite(breite) ? breite : ""}
-              onChange={(e) => setBreite(Number(e.target.value.replace(",", ".")))}
+              value={breite}
+              onChange={(e) => setBreite(e.target.value)}
             />
             <NumberInput
               label="Höhe"
               suffix="cm"
-              value={Number.isFinite(hoehe) ? hoehe : ""}
-              onChange={(e) => setHoehe(Number(e.target.value.replace(",", ".")))}
+              value={hoehe}
+              onChange={(e) => setHoehe(e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <NumberInput
+              label="Anzahl"
+              step={1}
+              integer
+              min={1}
+              value={anzahl}
+              onChange={(e) => setAnzahl(e.target.value)}
             />
           </div>
           {ergebnis && (
@@ -190,11 +233,29 @@ function KonfiguratorPage() {
                   ))}
                 </div>
 
-                <div className="pt-3 border-t border-[var(--color-hairline)] flex justify-between items-baseline">
-                  <span className="text-[17px] font-bold">Gesamt</span>
-                  <span className="text-[26px] font-serif font-bold tabular-nums text-[var(--color-brand)]">
-                    {eur.format(ergebnis.gesamt)}
-                  </span>
+                <div className="pt-3 border-t border-[var(--color-hairline)] space-y-2">
+                  {menge > 1 && (
+                    <>
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-[15px]">Einzelpreis</span>
+                        <span className="text-[15px] font-serif tabular-nums">
+                          {eur.format(ergebnis.gesamt)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-[15px] text-[var(--color-stone-muted)]">Anzahl</span>
+                        <span className="text-[15px] tabular-nums text-[var(--color-stone-muted)]">
+                          × {menge}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-[17px] font-bold">Gesamt</span>
+                    <span className="text-[26px] font-serif font-bold tabular-nums text-[var(--color-brand)]">
+                      {eur.format(gesamtMenge)}
+                    </span>
+                  </div>
                 </div>
               </>
             ) : (

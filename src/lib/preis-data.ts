@@ -329,4 +329,34 @@ export const MHZ_DUETTE_11_8120: Produkt = {
 };
 
 /** Alle verfügbaren Sonnenschutz-Produkte (für den Konfigurator-Dropdown). */
-export const MHZ_PRODUKTE: Produkt[] = [MHZ_PLISSEE_11_8120, MHZ_DUETTE_11_8120];
+/**
+ * Modell 11-8220 (Klebemontage-Variante). Gleiche Preismatrix wie 11-8120
+ * (identische Katalogseiten S.21–24), andere Montage: Winkelträger als
+ * 4-St.-Satz (14,80 € statt 19,40 €). Klebe-Set ist für 11-8220 gedacht.
+ */
+export const MHZ_PLISSEE_11_8220: Produkt = {
+  ...MHZ_PLISSEE_11_8120,
+  modell: "11-8220 (Klebemontage)",
+  zuschlaege: MHZ_PLISSEE_11_8120.zuschlaege!.map((z) =>
+    z.code === "WINKELTRAEGER"
+      ? { ...z, name: "Winkelträger Wandmontage (4 St., pro Anlage)", wert: 14.8 }
+      : z,
+  ),
+};
+
+export const MHZ_DUETTE_11_8220: Produkt = {
+  ...MHZ_DUETTE_11_8120,
+  modell: "11-8220 (Klebemontage)",
+  zuschlaege: MHZ_DUETTE_11_8120.zuschlaege!.map((z) =>
+    z.code === "WINKELTRAEGER"
+      ? { ...z, name: "Winkelträger Wandmontage (4 St., pro Anlage)", wert: 14.8 }
+      : z,
+  ),
+};
+
+export const MHZ_PRODUKTE: Produkt[] = [
+  MHZ_PLISSEE_11_8120,
+  MHZ_PLISSEE_11_8220,
+  MHZ_DUETTE_11_8120,
+  MHZ_DUETTE_11_8220,
+];
