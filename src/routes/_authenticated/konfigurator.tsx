@@ -46,9 +46,10 @@ function KonfiguratorPage() {
   );
   const [gruppeIdx, setGruppeIdx] = useState(0);
   // Maße als Rohstring halten, sonst wird beim Tippen von "94," sofort zu 94 geparst
-  // und das Komma verschwindet (→ "944" statt "94,4").
-  const [breite, setBreite] = useState("100");
-  const [hoehe, setHoehe] = useState("140");
+  // und das Komma verschwindet (→ "944" statt "94,4"). Start LEER, damit man nicht
+  // erst einen vorbelegten Wert löschen muss (sonst wird aus 100 + Tippen "1000").
+  const [breite, setBreite] = useState("");
+  const [hoehe, setHoehe] = useState("");
   const [anzahl, setAnzahl] = useState("1");
   const [schienenfarbe, setSchienenfarbe] = useState(SCHIENENFARBEN[0]);
   const [zuschlaege, setZuschlaege] = useState<string[]>([]);
@@ -79,16 +80,21 @@ function KonfiguratorPage() {
       if (istDachfenster(produkt)) {
         return berechneDachfenster(produkt, fensterCode, gruppeIdx);
       }
-      return berechnePreis(produkt, {
-        preisgruppe,
-        breite_cm: parseCm(breite),
-        hoehe_cm: parseCm(hoehe),
-        zuschlaege,
-      });
+      const b = parseCm(breite);
+      const h = parseCm(hoehe);
+      if (b <= 0 || h <= 0) return null; // noch keine Maße → kein Preis
+      return berechnePreis(produkt, { preisgruppe, breite_cm: b, hoehe_cm: h, zuschlaege });
     } catch {
       return null;
     }
   }, [produkt, preisgruppe, breite, hoehe, zuschlaege, fensterCode, gruppeIdx]);
+
+  const zuruecksetzen = () => {
+    setBreite("");
+    setHoehe("");
+    setAnzahl("1");
+    setZuschlaege([]);
+  };
 
   const menge = Math.max(1, Math.round(parseCm(anzahl)) || 1);
   const gesamtMenge = ergebnis?.lieferbar ? ergebnis.gesamt * menge : 0;
@@ -255,6 +261,13 @@ function KonfiguratorPage() {
               onChange={(e) => setAnzahl(e.target.value)}
             />
           </div>
+          <button
+            type="button"
+            onClick={zuruecksetzen}
+            className="text-[13px] text-[var(--color-stone-muted)] hover:text-[var(--color-ink)] underline underline-offset-2"
+          >
+            Zurücksetzen
+          </button>
           {!dach && ergebnis && (
             <p className="text-[13px] text-[var(--color-stone-muted)]">
               Verwendetes Raster{" "}
