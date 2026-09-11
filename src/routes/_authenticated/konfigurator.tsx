@@ -10,6 +10,10 @@ import { berechnePreis, berechneDachfenster, istDachfenster } from "@/lib/preis-
 import { MHZ_PRODUKTE } from "@/lib/preis-data";
 
 export const Route = createFileRoute("/_authenticated/konfigurator")({
+  // Optional ?projekt=<id>: vorausgewähltes Projekt (Absprung von der Projektseite).
+  validateSearch: (search: Record<string, unknown>): { projekt?: string } => ({
+    projekt: typeof search.projekt === "string" ? search.projekt : undefined,
+  }),
   head: () => ({ meta: [{ title: "Sonnenschutz-Konfigurator · Aufmaß-App" }] }),
   component: KonfiguratorPage,
 });
@@ -110,7 +114,8 @@ function KonfiguratorPage() {
       return data ?? [];
     },
   });
-  const [projektId, setProjektId] = useState("");
+  const { projekt: projektParam } = Route.useSearch();
+  const [projektId, setProjektId] = useState(projektParam ?? "");
   const [saving, setSaving] = useState(false);
 
   async function zumAngebot() {

@@ -46,6 +46,38 @@ export const Route = createFileRoute("/_authenticated/projekt/$id/")({
   component: ProjektDetail,
 });
 
+const eur = new Intl.NumberFormat("de-DE", {
+  style: "currency",
+  currency: "EUR",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+type SonnenschutzPos = {
+  id: string;
+  produkt: string;
+  modell: string | null;
+  gruppe: string | null;
+  breite_cm: number | null;
+  hoehe_cm: number | null;
+  anzahl: number;
+  schienenfarbe: string | null;
+  fenstertyp: string | null;
+  einzelpreis: number | null;
+  gesamtpreis: number | null;
+  created_at: string;
+};
+
+function posDetail(p: SonnenschutzPos): string {
+  const teile: string[] = [];
+  if (p.breite_cm != null && p.hoehe_cm != null)
+    teile.push(`${p.breite_cm} × ${p.hoehe_cm} cm`);
+  if (p.fenstertyp) teile.push(p.fenstertyp);
+  if (p.gruppe) teile.push(p.gruppe);
+  if (p.schienenfarbe) teile.push(p.schienenfarbe);
+  return teile.join(" · ");
+}
+
 type Projekt = {
   id: string;
   kunde: string;
@@ -344,6 +376,8 @@ function ProjektDetail() {
           <Plus className="size-4" strokeWidth={1.75} />
           Raum hinzufügen
         </button>
+
+        <SonnenschutzPositionen projektId={id} />
       </div>
 
       {/* End-Aktionen sticky */}
@@ -599,6 +633,143 @@ function KopfDaten({ projekt, onDelete }: { projekt: Projekt; onDelete: () => vo
           Projekt löschen
         </button>
       </div>
+    </section>
+  );
+}
+
+function SonnenschutzPositionen({ projektId }: { projektId: string }) {
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+
+  const positionenQ = useQuery({
+    queryKey: ["sonnenschutz", projektId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sonnenschutz_position" as never)
+        .select(
+          "id, produkt, modell, gruppe, breite_cm, hoehe_cm, anzahl, schienenfarbe, fenstertyp, einzelpreis, gesamtpreis, created_at",
+        )
+        .eq("projekt_id", projektId)
+        .order("created_at", { ascending: true });
+      if (error) {
+        // Tabelle evtl. noch nicht migriert → leise leer statt Fehler.
+        if (/sonnenschutz_position|relation|does not exist|schema cache/i.test(error.message))
+          return [] as SonnenschutzPos[];
+        throw error;
+      }
+      return (data ?? []) as unknown as SonnenschutzPos[];
+    },
+  });
+
+  const positionen = positionenQ.data ?? [];
+  const summe = positionen.reduce((a, p) => a + (p.gesamtpreis ?? 0), 0);
+
+  const remove = useMutation({
+    mutationFn: async (posId: string) => {
+      const { data: row, error: eR } = await supabase
+        .from("sonnenschutz_position" as never)
+        .select("*")
+        .eq("id", posId)
+        .maybeSingle();
+      if (eR) throw eR;
+      const { error } = await supabase
+        .from("sonnenschutz_position" as never)
+        .delete()
+        .eq("id", posId);
+      if (error) throw error;
+      return (row ?? null) as Record<string, unknown> | null;
+    },
+    onSuccess: (snapshot) => {
+      qc.invalidateQueries({ queryKey: ["sonnenschutz", projektId] });
+      toast.success("Position gelöscht", {
+        duration: 8000,
+        action: snapshot
+          ? {
+              label: "Rückgängig",
+              onClick: () => {
+                supabase
+                  .from("sonnenschutz_position" as never)
+                  .insert(snapshot as never)
+                  .then(({ error }: { error: { message: string } | null }) => {
+                    if (error) {
+                      toast.error("Wiederherstellen fehlgeschlagen: " + error.message);
+                      return;
+                    }
+                    qc.invalidateQueries({ queryKey: ["sonnenschutz", projektId] });
+                    toast.success("Position wiederhergestellt");
+                  });
+              },
+            }
+          : undefined,
+      });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <section className="pt-2">
+      <div className="flex items-baseline justify-between mb-2">
+        <h2 className="font-serif text-[22px] font-medium">Sonnenschutz</h2>
+        {positionen.length > 0 && (
+          <p className="text-[13px] text-[var(--color-stone-muted)]">
+            Summe{" "}
+            <span className="num-serif text-[var(--color-ink)]">{eur.format(summe)}</span>
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-2 mb-3">
+        {positionenQ.isLoading && (
+          <p className="text-base text-muted-foreground">Lade Positionen…</p>
+        )}
+        {!positionenQ.isLoading && positionen.length === 0 && (
+          <p className="text-[15px] text-[var(--color-stone-muted)] py-2">
+            Noch keine Sonnenschutz-Position zugeordnet.
+          </p>
+        )}
+        {positionen.map((p) => (
+          <div
+            key={p.id}
+            className="myr-card grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 p-4"
+          >
+            <div className="min-w-0">
+              <p className="font-serif text-[17px] leading-tight text-[var(--color-ink)] truncate">
+                {p.produkt}
+                {p.modell ? ` ${p.modell}` : ""}
+                {p.anzahl > 1 && (
+                  <span className="text-[var(--color-stone-muted)] num-serif"> × {p.anzahl}</span>
+                )}
+              </p>
+              <p className="text-[13px] text-[var(--color-stone-muted)] truncate">
+                {posDetail(p)}
+              </p>
+            </div>
+            <span className="text-[16px] font-serif tabular-nums text-[var(--color-ink)] shrink-0">
+              {eur.format(p.gesamtpreis ?? 0)}
+            </span>
+            <button
+              type="button"
+              onClick={() => remove.mutate(p.id)}
+              aria-label={`Position ${p.produkt}${p.modell ? " " + p.modell : ""} löschen`}
+              className="size-11 flex items-center justify-center text-[var(--color-stone-muted)] hover:text-[var(--color-danger)] transition-colors shrink-0"
+            >
+              <Trash2 className="size-5" strokeWidth={1.5} />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={() =>
+          navigate({ to: "/konfigurator", search: { projekt: projektId } })
+        }
+        className="w-full min-h-[52px] inline-flex items-center justify-center gap-2 border-[1.5px] border-[var(--color-brand)] text-[var(--color-brand)] bg-transparent hover:bg-[color-mix(in_oklab,var(--color-brand)_8%,transparent)] uppercase tracking-[0.14em] text-[13px] font-medium transition-colors duration-300"
+        style={{ borderRadius: 2, transitionTimingFunction: "cubic-bezier(0.16,1,0.3,1)" }}
+      >
+        <Plus className="size-4" strokeWidth={1.75} />
+        Position hinzufügen
+      </button>
     </section>
   );
 }
