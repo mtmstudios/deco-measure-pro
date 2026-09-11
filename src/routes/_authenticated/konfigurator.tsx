@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { AlertTriangle, Check } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { ScreenHeader } from "@/components/screen-header";
 import { NumberInput } from "@/components/number-input";
 import { berechnePreis, berechneDachfenster, istDachfenster } from "@/lib/preis-engine";
@@ -96,6 +99,51 @@ function KonfiguratorPage() {
     setZuschlaege([]);
   };
 
+  // Kundenzuordnung: konfigurierte Position einem Projekt (Kunde) zuordnen.
+  const { data: projekte = [] } = useQuery({
+    queryKey: ["projekte-konfigurator"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("projekt")
+        .select("id, kunde, objekt_bezeichnung")
+        .order("created_at", { ascending: false });
+      return data ?? [];
+    },
+  });
+  const [projektId, setProjektId] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function zumAngebot() {
+    if (!ergebnis?.lieferbar || !projektId) return;
+    setSaving(true);
+    const { error } = await supabase.from("sonnenschutz_position" as never).insert({
+      projekt_id: projektId,
+      produkt: produkt.produkt,
+      modell: produkt.modell ?? null,
+      gruppe: dach
+        ? `Stoffgruppe ${dach.gruppen[gruppeIdx]}`
+        : raster?.preisgruppen.find((g) => g.code === preisgruppe)?.name ?? null,
+      breite_cm: dach ? null : parseCm(breite),
+      hoehe_cm: dach ? null : parseCm(hoehe),
+      anzahl: menge,
+      schienenfarbe: dach ? null : schienenfarbe,
+      fenstertyp: dach ? fensterCode : null,
+      zuschlaege: ergebnis.zuschlaege,
+      einzelpreis: ergebnis.gesamt,
+      gesamtpreis: gesamtMenge,
+    } as never);
+    setSaving(false);
+    if (error) {
+      toast.error(
+        /sonnenschutz_position|relation|does not exist|schema cache/i.test(error.message)
+          ? "Tabelle 'sonnenschutz_position' fehlt noch — bitte Migration anwenden."
+          : error.message,
+      );
+      return;
+    }
+    toast.success("Zum Angebot hinzugefügt");
+  }
+
   const menge = Math.max(1, Math.round(parseCm(anzahl)) || 1);
   const gesamtMenge = ergebnis?.lieferbar ? ergebnis.gesamt * menge : 0;
 
@@ -113,6 +161,32 @@ function KonfiguratorPage() {
         title="Sonnenschutz-Konfigurator"
       />
       <div className="myr-page mx-auto max-w-[720px] px-4 md:px-6 lg:px-8 py-6 space-y-5 pb-28">
+        <section className="myr-card p-5 space-y-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              Kunde / Projekt
+            </span>
+            <select
+              value={projektId}
+              onChange={(e) => setProjektId(e.target.value)}
+              className="min-h-[52px] w-full bg-[var(--color-paper)] border border-[var(--color-hairline)] px-4 text-[17px] focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none"
+            >
+              <option value="">— Projekt wählen —</option>
+              {projekte.map((p: { id: string; kunde: string; objekt_bezeichnung: string | null }) => (
+                <option key={p.id} value={p.id}>
+                  {p.kunde}
+                  {p.objekt_bezeichnung ? ` · ${p.objekt_bezeichnung}` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+          {!projektId && (
+            <p className="text-[12px] text-[var(--color-stone-muted)]">
+              Wähle ein Projekt, um die Konfiguration dem Kunden zuzuordnen.
+            </p>
+          )}
+        </section>
+
         <section className="myr-card p-5 space-y-4">
           <div className="space-y-1">
             <p className="eyebrow">Auswahl</p>
@@ -385,6 +459,22 @@ function KonfiguratorPage() {
                 <AlertTriangle className="size-4 shrink-0 mt-0.5" strokeWidth={1.75} />
                 <div>{ergebnis.hinweise.join(" · ")}</div>
               </div>
+            )}
+
+            {ergebnis.lieferbar && (
+              <button
+                type="button"
+                onClick={zumAngebot}
+                disabled={saving || !projektId}
+                className="w-full min-h-[50px] mt-1 flex items-center justify-center gap-2 bg-[var(--color-brand)] text-[var(--color-paper)] text-[14px] font-semibold uppercase tracking-[0.06em] disabled:opacity-50"
+              >
+                <Check className="size-4" strokeWidth={2} />
+                {saving
+                  ? "Speichert…"
+                  : projektId
+                    ? "Zum Angebot hinzufügen"
+                    : "Erst Kunde / Projekt wählen"}
+              </button>
             )}
           </section>
         )}
