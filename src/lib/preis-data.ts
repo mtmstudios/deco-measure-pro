@@ -13,7 +13,7 @@ export const MHZ_PLISSEE_11_8120: Produkt = {
   hersteller: "MHZ",
   produkt: "Plissee",
   gruppen_label: "Stoffgruppe",
-  modell: "11-8120 (gespannt)",
+  modell: "11-8120",
   preisbasis: "UVP inkl. MwSt.",
   mindest_breite_cm: 20,
   mindest_hoehe_cm: 30,
@@ -166,7 +166,7 @@ export const MHZ_PLISSEE_11_8120: Produkt = {
 };
 
 /**
- * ECHTE MHZ-Preisdaten — DUETTE® Wabenplissee Modell 11-8120 (gespannt).
+ * ECHTE MHZ-Preisdaten — DUETTE® Wabenplissee Modell 11-8120.
  * Quelle: MHZ Preisliste 2025, Duette_25.pdf S. 21–24.
  * UVP inkl. MwSt. in EUR. Extrahiert & gegen die PDF-Seiten verifiziert (10.07.2026).
  * 5 Wabengruppen (W1–W5). Breite > 150 cm nur bis Höhe 200 cm → null.
@@ -175,7 +175,7 @@ export const MHZ_DUETTE_11_8120: Produkt = {
   hersteller: "MHZ",
   produkt: "Duette Wabenplissee",
   gruppen_label: "Wabengruppe",
-  modell: "11-8120 (gespannt)",
+  modell: "11-8120",
   preisbasis: "UVP inkl. MwSt.",
   mindest_breite_cm: 20,
   mindest_hoehe_cm: 30,
@@ -336,7 +336,7 @@ export const MHZ_DUETTE_11_8120: Produkt = {
  */
 export const MHZ_PLISSEE_11_8220: Produkt = {
   ...MHZ_PLISSEE_11_8120,
-  modell: "11-8220 (Klebemontage)",
+  modell: "11-8220",
   zuschlaege: MHZ_PLISSEE_11_8120.zuschlaege!.map((z) =>
     z.code === "WINKELTRAEGER"
       ? { ...z, name: "Winkelträger Wandmontage (4 St., pro Anlage)", wert: 14.8 }
@@ -346,7 +346,7 @@ export const MHZ_PLISSEE_11_8220: Produkt = {
 
 export const MHZ_DUETTE_11_8220: Produkt = {
   ...MHZ_DUETTE_11_8120,
-  modell: "11-8220 (Klebemontage)",
+  modell: "11-8220",
   zuschlaege: MHZ_DUETTE_11_8120.zuschlaege!.map((z) =>
     z.code === "WINKELTRAEGER"
       ? { ...z, name: "Winkelträger Wandmontage (4 St., pro Anlage)", wert: 14.8 }

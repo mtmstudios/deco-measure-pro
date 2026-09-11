@@ -27,10 +27,16 @@ const parseCm = (s: string): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
+/** Produkt-Kategorien (Plissee, Duette …) für die zweistufige Auswahl. */
+const KATEGORIEN = [...new Set(MHZ_PRODUKTE.map((p) => p.produkt))];
+
 function KonfiguratorPage() {
-  const [produktIdx, setProduktIdx] = useState(0);
-  const produkt = MHZ_PRODUKTE[produktIdx];
-  const [preisgruppe, setPreisgruppe] = useState(MHZ_PRODUKTE[0].preisgruppen[0].code);
+  // Ablauf: erst Produkt (Plissee/Duette), dann Modell.
+  const [kategorie, setKategorie] = useState(KATEGORIEN[0]);
+  const modelle = useMemo(() => MHZ_PRODUKTE.filter((p) => p.produkt === kategorie), [kategorie]);
+  const [modellIdx, setModellIdx] = useState(0);
+  const produkt = modelle[modellIdx] ?? modelle[0];
+  const [preisgruppe, setPreisgruppe] = useState(produkt.preisgruppen[0].code);
   // Maße als Rohstring halten, sonst wird beim Tippen von "94," sofort zu 94 geparst
   // und das Komma verschwindet (→ "944" statt "94,4").
   const [breite, setBreite] = useState("100");
@@ -39,11 +45,18 @@ function KonfiguratorPage() {
   const [schienenfarbe, setSchienenfarbe] = useState(SCHIENENFARBEN[0]);
   const [zuschlaege, setZuschlaege] = useState<string[]>([]);
 
-  // Beim Produktwechsel Preisgruppe + Zuschläge zurücksetzen
-  // (Plissee-Codes wie "PGA" existieren bei Duette nicht).
-  const wechsleProdukt = (idx: number) => {
-    setProduktIdx(idx);
-    setPreisgruppe(MHZ_PRODUKTE[idx].preisgruppen[0].code);
+  // Beim Produkt-/Modellwechsel Preisgruppe + Zuschläge zurücksetzen
+  // (Codes wie "PGA" gibt es bei anderen Produkten nicht).
+  const wechsleKategorie = (k: string) => {
+    const first = MHZ_PRODUKTE.filter((p) => p.produkt === k)[0];
+    setKategorie(k);
+    setModellIdx(0);
+    setPreisgruppe(first.preisgruppen[0].code);
+    setZuschlaege([]);
+  };
+  const wechsleModell = (i: number) => {
+    setModellIdx(i);
+    setPreisgruppe(modelle[i].preisgruppen[0].code);
     setZuschlaege([]);
   };
 
@@ -79,24 +92,41 @@ function KonfiguratorPage() {
       <div className="myr-page mx-auto max-w-[720px] px-4 md:px-6 lg:px-8 py-6 space-y-5 pb-28">
         <section className="myr-card p-5 space-y-4">
           <div className="space-y-1">
-            <p className="eyebrow">Produkt</p>
+            <p className="eyebrow">Auswahl</p>
             <p className="text-[13px] text-[var(--color-stone-muted)]">
-              {produkt.hersteller} {produkt.modell} · {produkt.preisbasis}
+              {produkt.hersteller} {produkt.produkt} {produkt.modell} · {produkt.preisbasis}
             </p>
           </div>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              Produkt
+            </span>
+            <select
+              value={kategorie}
+              onChange={(e) => wechsleKategorie(e.target.value)}
+              className="min-h-[52px] w-full bg-[var(--color-paper)] border border-[var(--color-hairline)] px-4 text-[17px] focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none"
+            >
+              {KATEGORIEN.map((k) => (
+                <option key={k} value={k}>
+                  {k}
+                </option>
+              ))}
+            </select>
+          </label>
 
           <label className="flex flex-col gap-1">
             <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               Modell
             </span>
             <select
-              value={produktIdx}
-              onChange={(e) => wechsleProdukt(Number(e.target.value))}
+              value={modellIdx}
+              onChange={(e) => wechsleModell(Number(e.target.value))}
               className="min-h-[52px] w-full bg-[var(--color-paper)] border border-[var(--color-hairline)] px-4 text-[17px] focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none"
             >
-              {MHZ_PRODUKTE.map((p, i) => (
+              {modelle.map((p, i) => (
                 <option key={i} value={i}>
-                  {p.produkt} · {p.modell}
+                  {p.modell}
                 </option>
               ))}
             </select>
