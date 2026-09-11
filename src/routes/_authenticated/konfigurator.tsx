@@ -131,7 +131,7 @@ function KonfiguratorPage() {
       zuschlaege: ergebnis.zuschlaege,
       einzelpreis: ergebnis.gesamt,
       gesamtpreis: gesamtMenge,
-    } as never);
+    });
     setSaving(false);
     if (error) {
       toast.error(
