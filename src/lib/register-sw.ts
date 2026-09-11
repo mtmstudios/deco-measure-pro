@@ -4,7 +4,55 @@
  * - `?sw=off` als Kill-Switch: hebt bestehende Registrierungen auf.
  */
 
+import { toast } from "sonner";
+
 const SW_PATH = "/sw.js";
+
+let updatePromptShown = false;
+
+/** Toast „Neue Version verfügbar" mit Neu-laden-Aktion (nur einmal). */
+function promptUpdate(): void {
+  if (updatePromptShown) return;
+  updatePromptShown = true;
+  toast("Neue Version verfügbar", {
+    description: "Aktualisiere, um die neuesten Änderungen zu laden.",
+    duration: Infinity,
+    action: {
+      label: "Neu laden",
+      onClick: () => window.location.reload(),
+    },
+  });
+}
+
+/**
+ * Erkennt eine neue App-Version (neuer Service Worker) und zeigt den Hinweis.
+ * Prüft zusätzlich bei jeder Rückkehr in die App auf Updates — praktisch für
+ * eine Home-Bildschirm-App, die selten komplett geschlossen wird.
+ */
+function watchForUpdate(reg: ServiceWorkerRegistration): void {
+  // Update wurde schon vor dieser Sitzung installiert und wartet.
+  if (reg.waiting && navigator.serviceWorker.controller) promptUpdate();
+
+  reg.addEventListener("updatefound", () => {
+    const nw = reg.installing;
+    if (!nw) return;
+    nw.addEventListener("statechange", () => {
+      // "installed" bei bestehendem Controller = echtes Update (kein Erst-Install).
+      if (nw.state === "installed" && navigator.serviceWorker.controller) {
+        promptUpdate();
+      }
+    });
+  });
+
+  // Bei Rückkehr in die App nach neuen Versionen suchen.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      reg.update().catch(() => {
+        /* offline o. ä. — ignorieren */
+      });
+    }
+  });
+}
 
 function isRefusedContext(): boolean {
   if (typeof window === "undefined") return true;
@@ -53,7 +101,8 @@ export async function registerServiceWorker(): Promise<void> {
     return;
   }
   try {
-    await navigator.serviceWorker.register(SW_PATH, { scope: "/" });
+    const reg = await navigator.serviceWorker.register(SW_PATH, { scope: "/" });
+    watchForUpdate(reg);
   } catch (err) {
     console.warn("[sw] register failed", err);
   }
