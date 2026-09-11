@@ -116,7 +116,7 @@ function KonfiguratorPage() {
   async function zumAngebot() {
     if (!ergebnis?.lieferbar || !projektId) return;
     setSaving(true);
-    const { error } = await supabase.from("sonnenschutz_position" as never).insert({
+    const { error } = await supabase.from("sonnenschutz_position").insert({
       projekt_id: projektId,
       produkt: produkt.produkt,
       modell: produkt.modell ?? null,
@@ -131,7 +131,7 @@ function KonfiguratorPage() {
       zuschlaege: ergebnis.zuschlaege,
       einzelpreis: ergebnis.gesamt,
       gesamtpreis: gesamtMenge,
-    } as never);
+    });
     setSaving(false);
     if (error) {
       toast.error(

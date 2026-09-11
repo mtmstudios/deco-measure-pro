@@ -584,6 +584,68 @@ export type Database = {
           },
         ]
       }
+      sonnenschutz_position: {
+        Row: {
+          anzahl: number
+          bezeichnung: string | null
+          breite_cm: number | null
+          created_at: string
+          einzelpreis: number | null
+          fenstertyp: string | null
+          gesamtpreis: number | null
+          gruppe: string | null
+          hoehe_cm: number | null
+          id: string
+          modell: string | null
+          produkt: string
+          projekt_id: string
+          schienenfarbe: string | null
+          zuschlaege: Json
+        }
+        Insert: {
+          anzahl?: number
+          bezeichnung?: string | null
+          breite_cm?: number | null
+          created_at?: string
+          einzelpreis?: number | null
+          fenstertyp?: string | null
+          gesamtpreis?: number | null
+          gruppe?: string | null
+          hoehe_cm?: number | null
+          id?: string
+          modell?: string | null
+          produkt: string
+          projekt_id: string
+          schienenfarbe?: string | null
+          zuschlaege?: Json
+        }
+        Update: {
+          anzahl?: number
+          bezeichnung?: string | null
+          breite_cm?: number | null
+          created_at?: string
+          einzelpreis?: number | null
+          fenstertyp?: string | null
+          gesamtpreis?: number | null
+          gruppe?: string | null
+          hoehe_cm?: number | null
+          id?: string
+          modell?: string | null
+          produkt?: string
+          projekt_id?: string
+          schienenfarbe?: string | null
+          zuschlaege?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sonnenschutz_position_projekt_id_fkey"
+            columns: ["projekt_id"]
+            isOneToOne: false
+            referencedRelation: "projekt"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       uebergabe: {
         Row: {
           created_at: string
