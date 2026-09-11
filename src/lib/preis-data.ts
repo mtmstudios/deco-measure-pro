@@ -7,7 +7,7 @@
  * Für Breite > 150 cm (Stufen 160/170/180) max. Höhe 200 cm (Maxi-Profil-Pflicht)
  *  → Zellen darüber = null (nicht lieferbar).
  */
-import type { Produkt } from "./preis-engine";
+import type { Produkt, DachfensterProdukt, AnyProdukt } from "./preis-engine";
 
 export const MHZ_PLISSEE_11_8120: Produkt = {
   hersteller: "MHZ",
@@ -517,10 +517,70 @@ export const MHZ_PLISSEE_11_8222: Produkt = {
   ],
 };
 
-export const MHZ_PRODUKTE: Produkt[] = [
+
+/**
+ * ECHTE MHZ-Preisdaten — Dachfenster-Plissee Modell 11-7225 (VELUX/Roto).
+ * Quelle: MHZ Preisliste 2025, Plissee_25.pdf S. 75. UVP inkl. MwSt.
+ * Preis nach VELUX-Fenstertyp × Preisgruppe (A/1/2/3/4) — kein Breite×Höhe-Raster.
+ * Extrahiert & gegen die PDF-Seite verifiziert (11.09.2026). (Roto + weitere Typen folgen.)
+ */
+export const MHZ_DACHFENSTER_11_7225: DachfensterProdukt = {
+  art: "dachfenster",
+  hersteller: "MHZ",
+  produkt: "Dachfenster-Plissee",
+  gruppen_label: "Stoffgruppe",
+  modell: "11-7225",
+  preisbasis: "UVP inkl. MwSt.",
+  gruppen: ["A", "1", "2", "3", "4"],
+  fenster: [
+    { code: "C02", preise: [192, 203, 212, 217, 225] },
+    { code: "CK02", preise: [192, 203, 212, 217, 225] },
+    { code: "C04", preise: [206, 221, 232, 238, 249] },
+    { code: "CK04", preise: [206, 221, 232, 238, 249] },
+    { code: "C06", preise: [218, 240, 249, 257, 271] },
+    { code: "CK06", preise: [218, 240, 249, 257, 271] },
+    { code: "F04", preise: [221, 240, 254, 260, 274] },
+    { code: "FK04", preise: [221, 240, 254, 260, 274] },
+    { code: "F06", preise: [240, 262, 272, 280, 303] },
+    { code: "FK06", preise: [240, 262, 272, 280, 303] },
+    { code: "F08", preise: [252, 272, 291, 306, 328] },
+    { code: "FK08", preise: [257, 280, 306, 318, 340] },
+    { code: "M34", preise: [255, 277, 299, 306, 327] },
+    { code: "MK04", preise: [255, 277, 299, 306, 327] },
+    { code: "M06", preise: [274, 305, 323, 337, 367] },
+    { code: "MK06", preise: [274, 305, 323, 337, 367] },
+    { code: "M08", preise: [293, 327, 347, 369, 399] },
+    { code: "MK08", preise: [302, 339, 367, 384, 421] },
+    { code: "M10", preise: [313, 347, 376, 399, 437] },
+    { code: "MK10", preise: [318, 364, 386, 415, 455] },
+    { code: "P04", preise: [269, 299, 320, 328, 359] },
+    { code: "P06", preise: [297, 325, 345, 367, 396] },
+    { code: "PK06", preise: [297, 325, 345, 367, 396] },
+    { code: "P08", preise: [316, 353, 376, 399, 437] },
+    { code: "PK08", preise: [323, 369, 393, 418, 457] },
+    { code: "P10", preise: [328, 374, 408, 435, 475] },
+    { code: "PK10", preise: [340, 386, 424, 454, 500] },
+    { code: "P34", preise: [269, 299, 320, 328, 359] },
+    { code: "S06", preise: [328, 373, 395, 421, 457] },
+    { code: "SK06", preise: [328, 373, 395, 421, 457] },
+    { code: "S08", preise: [357, 399, 432, 466, 508] },
+    { code: "SK08", preise: [367, 416, 454, 483, 534] },
+    { code: "S10", preise: [374, 429, 471, 505, 557] },
+    { code: "SK10", preise: [387, 447, 491, 522, 586] },
+    { code: "S34", preise: [303, 333, 364, 376, 408] },
+    { code: "UK04", preise: [333, 373, 398, 423, 461] },
+    { code: "U08", preise: [390, 449, 491, 522, 581] },
+    { code: "UK08", preise: [406, 466, 511, 551, 607] },
+    { code: "U10", preise: [418, 488, 528, 577, 639] },
+    { code: "UK10", preise: [437, 505, 551, 598, 669] },
+  ],
+};
+
+export const MHZ_PRODUKTE: AnyProdukt[] = [
   MHZ_PLISSEE_11_8120,
   MHZ_PLISSEE_11_8220,
   MHZ_PLISSEE_11_8222,
   MHZ_DUETTE_11_8120,
   MHZ_DUETTE_11_8220,
+  MHZ_DACHFENSTER_11_7225,
 ];

@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { ScreenHeader } from "@/components/screen-header";
 import { NumberInput } from "@/components/number-input";
-import { berechnePreis } from "@/lib/preis-engine";
+import { berechnePreis, berechneDachfenster, istDachfenster } from "@/lib/preis-engine";
 import { MHZ_PRODUKTE } from "@/lib/preis-data";
 
 export const Route = createFileRoute("/_authenticated/konfigurator")({
@@ -36,7 +36,15 @@ function KonfiguratorPage() {
   const modelle = useMemo(() => MHZ_PRODUKTE.filter((p) => p.produkt === kategorie), [kategorie]);
   const [modellIdx, setModellIdx] = useState(0);
   const produkt = modelle[modellIdx] ?? modelle[0];
-  const [preisgruppe, setPreisgruppe] = useState(produkt.preisgruppen[0].code);
+  const dach = istDachfenster(produkt) ? produkt : null;
+  const raster = istDachfenster(produkt) ? null : produkt;
+  const [preisgruppe, setPreisgruppe] = useState(
+    istDachfenster(MHZ_PRODUKTE[0]) ? "" : MHZ_PRODUKTE[0].preisgruppen[0].code,
+  );
+  const [fensterCode, setFensterCode] = useState(
+    istDachfenster(MHZ_PRODUKTE[0]) ? MHZ_PRODUKTE[0].fenster[0].code : "",
+  );
+  const [gruppeIdx, setGruppeIdx] = useState(0);
   // Maße als Rohstring halten, sonst wird beim Tippen von "94," sofort zu 94 geparst
   // und das Komma verschwindet (→ "944" statt "94,4").
   const [breite, setBreite] = useState("100");
@@ -47,21 +55,30 @@ function KonfiguratorPage() {
 
   // Beim Produkt-/Modellwechsel Preisgruppe + Zuschläge zurücksetzen
   // (Codes wie "PGA" gibt es bei anderen Produkten nicht).
+  const applyProdukt = (p: (typeof MHZ_PRODUKTE)[number]) => {
+    if (istDachfenster(p)) {
+      setFensterCode(p.fenster[0].code);
+      setGruppeIdx(0);
+    } else {
+      setPreisgruppe(p.preisgruppen[0].code);
+    }
+    setZuschlaege([]);
+  };
   const wechsleKategorie = (k: string) => {
-    const first = MHZ_PRODUKTE.filter((p) => p.produkt === k)[0];
     setKategorie(k);
     setModellIdx(0);
-    setPreisgruppe(first.preisgruppen[0].code);
-    setZuschlaege([]);
+    applyProdukt(MHZ_PRODUKTE.filter((p) => p.produkt === k)[0]);
   };
   const wechsleModell = (i: number) => {
     setModellIdx(i);
-    setPreisgruppe(modelle[i].preisgruppen[0].code);
-    setZuschlaege([]);
+    applyProdukt(modelle[i]);
   };
 
   const ergebnis = useMemo(() => {
     try {
+      if (istDachfenster(produkt)) {
+        return berechneDachfenster(produkt, fensterCode, gruppeIdx);
+      }
       return berechnePreis(produkt, {
         preisgruppe,
         breite_cm: parseCm(breite),
@@ -71,7 +88,7 @@ function KonfiguratorPage() {
     } catch {
       return null;
     }
-  }, [produkt, preisgruppe, breite, hoehe, zuschlaege]);
+  }, [produkt, preisgruppe, breite, hoehe, zuschlaege, fensterCode, gruppeIdx]);
 
   const menge = Math.max(1, Math.round(parseCm(anzahl)) || 1);
   const gesamtMenge = ergebnis?.lieferbar ? ergebnis.gesamt * menge : 0;
@@ -132,57 +149,102 @@ function KonfiguratorPage() {
             </select>
           </label>
 
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              {produkt.gruppen_label ?? "Preisgruppe"}
-            </span>
-            <select
-              value={preisgruppe}
-              onChange={(e) => setPreisgruppe(e.target.value)}
-              className="min-h-[52px] w-full bg-[var(--color-paper)] border border-[var(--color-hairline)] px-4 text-[17px] focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none"
-            >
-              {produkt.preisgruppen.map((pg) => (
-                <option key={pg.code} value={pg.code}>
-                  {pg.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          {dach && (
+            <>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  Fenstertyp (VELUX / Roto)
+                </span>
+                <select
+                  value={fensterCode}
+                  onChange={(e) => setFensterCode(e.target.value)}
+                  className="min-h-[52px] w-full bg-[var(--color-paper)] border border-[var(--color-hairline)] px-4 text-[17px] focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none"
+                >
+                  {dach.fenster.map((z) => (
+                    <option key={z.code} value={z.code}>
+                      {z.code}
+                      {z.masse ? ` · ${z.masse}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              Schienenfarbe
-            </span>
-            <select
-              value={schienenfarbe}
-              onChange={(e) => setSchienenfarbe(e.target.value)}
-              className="min-h-[52px] w-full bg-[var(--color-paper)] border border-[var(--color-hairline)] px-4 text-[17px] focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none"
-            >
-              {SCHIENENFARBEN.map((f) => (
-                <option key={f} value={f}>
-                  {f}
-                </option>
-              ))}
-            </select>
-          </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  {dach.gruppen_label ?? "Stoffgruppe"}
+                </span>
+                <select
+                  value={gruppeIdx}
+                  onChange={(e) => setGruppeIdx(Number(e.target.value))}
+                  className="min-h-[52px] w-full bg-[var(--color-paper)] border border-[var(--color-hairline)] px-4 text-[17px] focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none"
+                >
+                  {dach.gruppen.map((g, i) => (
+                    <option key={g} value={i}>
+                      Stoffgruppe {g}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </>
+          )}
+
+          {raster && (
+            <>
+              <label className="flex flex-col gap-1">
+                <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  {raster.gruppen_label ?? "Preisgruppe"}
+                </span>
+                <select
+                  value={preisgruppe}
+                  onChange={(e) => setPreisgruppe(e.target.value)}
+                  className="min-h-[52px] w-full bg-[var(--color-paper)] border border-[var(--color-hairline)] px-4 text-[17px] focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none"
+                >
+                  {raster.preisgruppen.map((pg) => (
+                    <option key={pg.code} value={pg.code}>
+                      {pg.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex flex-col gap-1">
+                <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  Schienenfarbe
+                </span>
+                <select
+                  value={schienenfarbe}
+                  onChange={(e) => setSchienenfarbe(e.target.value)}
+                  className="min-h-[52px] w-full bg-[var(--color-paper)] border border-[var(--color-hairline)] px-4 text-[17px] focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none"
+                >
+                  {SCHIENENFARBEN.map((f) => (
+                    <option key={f} value={f}>
+                      {f}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </>
+          )}
         </section>
 
         <section className="myr-card p-5 space-y-4">
-          <p className="eyebrow">Maße</p>
-          <div className="grid grid-cols-2 gap-3">
-            <NumberInput
-              label="Breite"
-              suffix="cm"
-              value={breite}
-              onChange={(e) => setBreite(e.target.value)}
-            />
-            <NumberInput
-              label="Höhe"
-              suffix="cm"
-              value={hoehe}
-              onChange={(e) => setHoehe(e.target.value)}
-            />
-          </div>
+          <p className="eyebrow">{dach ? "Menge" : "Maße"}</p>
+          {!dach && (
+            <div className="grid grid-cols-2 gap-3">
+              <NumberInput
+                label="Breite"
+                suffix="cm"
+                value={breite}
+                onChange={(e) => setBreite(e.target.value)}
+              />
+              <NumberInput
+                label="Höhe"
+                suffix="cm"
+                value={hoehe}
+                onChange={(e) => setHoehe(e.target.value)}
+              />
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <NumberInput
               label="Anzahl"
@@ -193,7 +255,7 @@ function KonfiguratorPage() {
               onChange={(e) => setAnzahl(e.target.value)}
             />
           </div>
-          {ergebnis && (
+          {!dach && ergebnis && (
             <p className="text-[13px] text-[var(--color-stone-muted)]">
               Verwendetes Raster{" "}
               <span className="num-serif text-[var(--color-ink)]">

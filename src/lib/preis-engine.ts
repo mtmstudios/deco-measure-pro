@@ -148,4 +148,59 @@ export function berechnePreis(produkt: Produkt, konfig: Konfiguration): PreisErg
   };
 }
 
+/* =====================================================================
+ * Dachfenster-Plissee: Preis nach Fenstertyp (VELUX/Roto-Code) × Preisgruppe.
+ * Kein Breite×Höhe-Raster — eigener Lookup.
+ * ===================================================================== */
+
+export interface DachfensterZeile {
+  /** Fenstertyp-Code, z. B. "MK06". */
+  code: string;
+  /** Flügelmaße (nur Anzeige), z. B. "61,3 × 99,5". */
+  masse?: string;
+  /** Preis je Preisgruppe (parallel zu produkt.gruppen). null = nicht lieferbar. */
+  preise: (number | null)[];
+}
+
+export interface DachfensterProdukt {
+  art: "dachfenster";
+  hersteller: string;
+  produkt: string;
+  modell?: string;
+  preisbasis?: string;
+  gruppen_label?: string;
+  /** Preisgruppen-Anzeigenamen, z. B. ["A", "1", "2", "3", "4"]. */
+  gruppen: string[];
+  fenster: DachfensterZeile[];
+  zuschlaege?: Zuschlag[];
+}
+
+export type AnyProdukt = Produkt | DachfensterProdukt;
+
+export function istDachfenster(p: AnyProdukt): p is DachfensterProdukt {
+  return (p as DachfensterProdukt).art === "dachfenster";
+}
+
+/** Dachfenster-Preis: Fenstertyp + Preisgruppen-Index → Preis. */
+export function berechneDachfenster(
+  produkt: DachfensterProdukt,
+  fensterCode: string,
+  gruppeIndex: number,
+): PreisErgebnis {
+  const zeile = produkt.fenster.find((z) => z.code === fensterCode);
+  const preis = zeile?.preise[gruppeIndex];
+  const leer = { breite_cm: 0, hoehe_cm: 0 };
+  if (preis == null) {
+    return {
+      lieferbar: false,
+      grundpreis: 0,
+      zuschlaege: [],
+      gesamt: 0,
+      raster: leer,
+      hinweise: ["Für dieses Fenster / diese Stoffgruppe nicht lieferbar."],
+    };
+  }
+  return { lieferbar: true, grundpreis: preis, zuschlaege: [], gesamt: preis, raster: leer, hinweise: [] };
+}
+
 // Echte Produktdaten (MHZ Plissee 11-8120) liegen in ./preis-data.ts.
