@@ -346,9 +346,11 @@ export type Database = {
           betrieb_id: string
           created_at: string
           created_by: string | null
+          fahrt_kosten: number | null
           gewerk: string | null
           id: string
           kunde: string
+          montage_kosten: number | null
           objekt_bezeichnung: string
           sachbearbeiter: string | null
           status: Database["public"]["Enums"]["projekt_status"]
@@ -362,9 +364,11 @@ export type Database = {
           betrieb_id: string
           created_at?: string
           created_by?: string | null
+          fahrt_kosten?: number | null
           gewerk?: string | null
           id?: string
           kunde: string
+          montage_kosten?: number | null
           objekt_bezeichnung: string
           sachbearbeiter?: string | null
           status?: Database["public"]["Enums"]["projekt_status"]
@@ -378,9 +382,11 @@ export type Database = {
           betrieb_id?: string
           created_at?: string
           created_by?: string | null
+          fahrt_kosten?: number | null
           gewerk?: string | null
           id?: string
           kunde?: string
+          montage_kosten?: number | null
           objekt_bezeichnung?: string
           sachbearbeiter?: string | null
           status?: Database["public"]["Enums"]["projekt_status"]
