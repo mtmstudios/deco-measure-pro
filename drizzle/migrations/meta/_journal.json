@@ -15,6 +15,13 @@
       "when": 1789134220653,
       "tag": "0001_projekt_montage_fahrt",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789235921199,
+      "tag": "0002_sonnenschutz_montage_fahrt_zone",
+      "breakpoints": true
     }
   ]
 }
