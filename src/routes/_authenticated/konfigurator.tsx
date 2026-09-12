@@ -8,6 +8,7 @@ import { ScreenHeader } from "@/components/screen-header";
 import { NumberInput } from "@/components/number-input";
 import { berechnePreis, berechneDachfenster, istDachfenster } from "@/lib/preis-engine";
 import { MHZ_PRODUKTE } from "@/lib/preis-data";
+import { MONTAGE_OPTIONEN, defaultMontageCode } from "@/lib/montage-fahrt";
 
 export const Route = createFileRoute("/_authenticated/konfigurator")({
   // Optional ?projekt=<id>: vorausgewähltes Projekt (Absprung von der Projektseite).
@@ -60,6 +61,11 @@ function KonfiguratorPage() {
   const [anzahl, setAnzahl] = useState("1");
   const [schienenfarbe, setSchienenfarbe] = useState(SCHIENENFARBEN[0]);
   const [zuschlaege, setZuschlaege] = useState<string[]>([]);
+  // Montage je Position — Satz hängt vom Typ ab (Standard je Produkt vorbelegt).
+  const [montageCode, setMontageCode] = useState(
+    defaultMontageCode(istDachfenster(MHZ_PRODUKTE[0])),
+  );
+  const montage = MONTAGE_OPTIONEN.find((o) => o.code === montageCode) ?? MONTAGE_OPTIONEN[0];
 
   // Beim Produkt-/Modellwechsel Preisgruppe + Zuschläge zurücksetzen
   // (Codes wie "PGA" gibt es bei anderen Produkten nicht).
@@ -71,6 +77,7 @@ function KonfiguratorPage() {
       setPreisgruppe(p.preisgruppen[0].code);
     }
     setZuschlaege([]);
+    setMontageCode(defaultMontageCode(istDachfenster(p)));
   };
   const wechsleKategorie = (k: string) => {
     setKategorie(k);
@@ -121,7 +128,7 @@ function KonfiguratorPage() {
   async function zumAngebot() {
     if (!ergebnis?.lieferbar || !projektId) return;
     setSaving(true);
-    const { error } = await supabase.from("sonnenschutz_position").insert({
+    const { error } = await supabase.from("sonnenschutz_position" as never).insert({
       projekt_id: projektId,
       produkt: produkt.produkt,
       modell: produkt.modell ?? null,
@@ -136,12 +143,16 @@ function KonfiguratorPage() {
       zuschlaege: ergebnis.zuschlaege,
       einzelpreis: ergebnis.gesamt,
       gesamtpreis: gesamtMenge,
-    });
+      montage_typ: montage.code === "keine" ? null : montage.label,
+      montage_kosten: montage.brutto || null,
+    } as never);
     setSaving(false);
     if (error) {
       toast.error(
-        /sonnenschutz_position|relation|does not exist|schema cache/i.test(error.message)
-          ? "Tabelle 'sonnenschutz_position' fehlt noch — bitte Migration anwenden."
+        /sonnenschutz_position|montage_|relation|does not exist|column|schema cache/i.test(
+          error.message,
+        )
+          ? "Tabelle/Spalten fehlen noch — bitte Migration anwenden."
           : error.message,
       );
       return;
@@ -151,6 +162,8 @@ function KonfiguratorPage() {
 
   const menge = Math.max(1, Math.round(parseCm(anzahl)) || 1);
   const gesamtMenge = ergebnis?.lieferbar ? ergebnis.gesamt * menge : 0;
+  const montageMenge = ergebnis?.lieferbar ? montage.brutto * menge : 0;
+  const gesamtInklMontage = gesamtMenge + montageMenge;
 
   const toggleZuschlag = (code: string) => {
     setZuschlaege((prev) =>
@@ -340,6 +353,23 @@ function KonfiguratorPage() {
               onChange={(e) => setAnzahl(e.target.value)}
             />
           </div>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              Montage
+            </span>
+            <select
+              value={montageCode}
+              onChange={(e) => setMontageCode(e.target.value)}
+              className="min-h-[52px] w-full bg-[var(--color-paper)] border border-[var(--color-hairline)] px-4 text-[17px] focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none"
+            >
+              {MONTAGE_OPTIONEN.map((o) => (
+                <option key={o.code} value={o.code}>
+                  {o.label}
+                  {o.brutto > 0 ? ` · ${eur.format(o.brutto)}` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
           <button
             type="button"
             onClick={zuruecksetzen}
@@ -434,10 +464,20 @@ function KonfiguratorPage() {
                       </div>
                     </>
                   )}
+                  {montage.brutto > 0 && (
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-[15px] text-[var(--color-stone-muted)]">
+                        Montage · {montage.label}
+                      </span>
+                      <span className="text-[15px] tabular-nums text-[var(--color-stone-muted)]">
+                        + {eur.format(montageMenge)}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-baseline">
                     <span className="text-[17px] font-bold">Gesamt</span>
                     <span className="text-[26px] font-serif font-bold tabular-nums text-[var(--color-brand)]">
-                      {eur.format(gesamtMenge)}
+                      {eur.format(gesamtInklMontage)}
                     </span>
                   </div>
                 </div>

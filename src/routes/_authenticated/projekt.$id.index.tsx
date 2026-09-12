@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NumberInput } from "@/components/number-input";
+import { FAHRT_OPTIONEN } from "@/lib/montage-fahrt";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,6 +66,8 @@ type SonnenschutzPos = {
   fenstertyp: string | null;
   einzelpreis: number | null;
   gesamtpreis: number | null;
+  montage_typ: string | null;
+  montage_kosten: number | null;
   created_at: string;
 };
 
@@ -79,16 +81,6 @@ function posDetail(p: SonnenschutzPos): string {
   return teile.join(" · ");
 }
 
-/** Euro-Eingabe (Montage/Fahrt) parsen — akzeptiert Komma. Leer → 0. */
-function parseBetrag(s: string): number {
-  const n = Number(String(s).replace(",", "."));
-  return Number.isFinite(n) ? n : 0;
-}
-/** Gespeicherten Betrag als Eingabe-String (mit Komma) darstellen. */
-function betragToStr(n: number | null | undefined): string {
-  return n != null ? String(n).replace(".", ",") : "";
-}
-
 type Projekt = {
   id: string;
   kunde: string;
@@ -100,8 +92,8 @@ type Projekt = {
   gewerk: string | null;
   status: string;
   uebergeben_at?: string | null;
-  montage_kosten?: number | null;
   fahrt_kosten?: number | null;
+  fahrt_zone?: string | null;
 };
 
 type Raum = {
@@ -392,8 +384,8 @@ function ProjektDetail() {
 
         <SonnenschutzPositionen
           projektId={id}
-          montageKosten={projekt?.montage_kosten ?? null}
           fahrtKosten={projekt?.fahrt_kosten ?? null}
+          fahrtZone={projekt?.fahrt_zone ?? null}
         />
       </div>
 
@@ -656,21 +648,15 @@ function KopfDaten({ projekt, onDelete }: { projekt: Projekt; onDelete: () => vo
 
 function SonnenschutzPositionen({
   projektId,
-  montageKosten,
   fahrtKosten,
+  fahrtZone,
 }: {
   projektId: string;
-  montageKosten: number | null;
   fahrtKosten: number | null;
+  fahrtZone: string | null;
 }) {
   const qc = useQueryClient();
   const navigate = useNavigate();
-
-  const [montageStr, setMontageStr] = useState(betragToStr(montageKosten));
-  const [fahrtStr, setFahrtStr] = useState(betragToStr(fahrtKosten));
-  // Nach dem Speichern (Refetch) die Felder mit dem gespeicherten Wert synchronisieren.
-  useEffect(() => setMontageStr(betragToStr(montageKosten)), [montageKosten]);
-  useEffect(() => setFahrtStr(betragToStr(fahrtKosten)), [fahrtKosten]);
 
   const positionenQ = useQuery({
     queryKey: ["sonnenschutz", projektId],
@@ -678,13 +664,17 @@ function SonnenschutzPositionen({
       const { data, error } = await supabase
         .from("sonnenschutz_position" as never)
         .select(
-          "id, produkt, modell, gruppe, breite_cm, hoehe_cm, anzahl, schienenfarbe, fenstertyp, einzelpreis, gesamtpreis, created_at",
+          "id, produkt, modell, gruppe, breite_cm, hoehe_cm, anzahl, schienenfarbe, fenstertyp, einzelpreis, gesamtpreis, montage_typ, montage_kosten, created_at",
         )
         .eq("projekt_id", projektId)
         .order("created_at", { ascending: true });
       if (error) {
-        // Tabelle evtl. noch nicht migriert → leise leer statt Fehler.
-        if (/sonnenschutz_position|relation|does not exist|schema cache/i.test(error.message))
+        // Tabelle/Spalten evtl. noch nicht migriert → leise leer statt Fehler.
+        if (
+          /sonnenschutz_position|montage_|relation|does not exist|column|schema cache/i.test(
+            error.message,
+          )
+        )
           return [] as SonnenschutzPos[];
         throw error;
       }
@@ -693,7 +683,11 @@ function SonnenschutzPositionen({
   });
 
   const positionen = positionenQ.data ?? [];
-  const summe = positionen.reduce((a, p) => a + (p.gesamtpreis ?? 0), 0);
+  const produkteSumme = positionen.reduce((a, p) => a + (p.gesamtpreis ?? 0), 0);
+  const montageSumme = positionen.reduce(
+    (a, p) => a + (p.montage_kosten ?? 0) * (p.anzahl ?? 1),
+    0,
+  );
 
   const remove = useMutation({
     mutationFn: async (posId: string) => {
@@ -737,39 +731,27 @@ function SonnenschutzPositionen({
     onError: (e: Error) => toast.error(e.message),
   });
 
-  // Angebots-Zusatzkosten (Montage + Fahrt) auf Projekt-Ebene speichern.
-  const saveKosten = useMutation({
-    mutationFn: async (patch: {
-      montage_kosten?: number | null;
-      fahrt_kosten?: number | null;
-    }) => {
+  // Fahrt (Staffel) je Auftrag speichern — Zone + zugehöriger Brutto-Satz.
+  const saveFahrt = useMutation({
+    mutationFn: async (code: string) => {
+      const opt = FAHRT_OPTIONEN.find((o) => o.code === code);
       const { error } = await supabase
         .from("projekt" as never)
-        .update(patch as never)
+        .update({ fahrt_zone: code, fahrt_kosten: opt ? opt.brutto : null } as never)
         .eq("id", projektId);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projekt", projektId] }),
     onError: (e: Error) =>
       toast.error(
-        /montage_kosten|fahrt_kosten|column|does not exist|schema cache/i.test(e.message)
-          ? "Spalten 'montage_kosten/fahrt_kosten' fehlen noch — bitte Migration anwenden."
+        /fahrt_zone|fahrt_kosten|column|does not exist|schema cache/i.test(e.message)
+          ? "Spalten 'fahrt_zone/fahrt_kosten' fehlen noch — bitte Migration anwenden."
           : e.message,
       ),
   });
 
-  const commitMontage = () => {
-    const val = montageStr.trim() === "" ? null : parseBetrag(montageStr);
-    if (val === (montageKosten ?? null)) return;
-    saveKosten.mutate({ montage_kosten: val });
-  };
-  const commitFahrt = () => {
-    const val = fahrtStr.trim() === "" ? null : parseBetrag(fahrtStr);
-    if (val === (fahrtKosten ?? null)) return;
-    saveKosten.mutate({ fahrt_kosten: val });
-  };
-
-  const gesamt = summe + parseBetrag(montageStr) + parseBetrag(fahrtStr);
+  const fahrtBetrag = fahrtKosten ?? 0;
+  const gesamt = produkteSumme + montageSumme + fahrtBetrag;
 
   return (
     <section className="pt-2">
@@ -802,6 +784,14 @@ function SonnenschutzPositionen({
               <p className="text-[13px] text-[var(--color-stone-muted)] truncate">
                 {posDetail(p)}
               </p>
+              {p.montage_typ && (
+                <p className="text-[12px] text-[var(--color-stone-muted)] truncate">
+                  Montage: {p.montage_typ}
+                  {p.montage_kosten
+                    ? ` · ${eur.format(p.montage_kosten * (p.anzahl ?? 1))}`
+                    : ""}
+                </p>
+              )}
             </div>
             <span className="text-[16px] font-serif tabular-nums text-[var(--color-ink)] shrink-0">
               {eur.format(p.gesamtpreis ?? 0)}
@@ -834,25 +824,36 @@ function SonnenschutzPositionen({
         <div className="myr-card p-5 space-y-3 bg-[var(--color-sand)] mt-3">
           <p className="eyebrow">Angebotssumme</p>
           <div className="flex justify-between items-baseline">
-            <span className="text-[15px]">Zwischensumme</span>
-            <span className="text-[17px] font-serif tabular-nums">{eur.format(summe)}</span>
+            <span className="text-[15px]">Produkte</span>
+            <span className="text-[17px] font-serif tabular-nums">
+              {eur.format(produkteSumme)}
+            </span>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <NumberInput
-              label="Montage"
-              suffix="€"
-              value={montageStr}
-              onChange={(e) => setMontageStr(e.target.value)}
-              onBlur={commitMontage}
-            />
-            <NumberInput
-              label="Fahrt"
-              suffix="€"
-              value={fahrtStr}
-              onChange={(e) => setFahrtStr(e.target.value)}
-              onBlur={commitFahrt}
-            />
-          </div>
+          {montageSumme > 0 && (
+            <div className="flex justify-between items-baseline">
+              <span className="text-[15px]">Montage</span>
+              <span className="text-[17px] font-serif tabular-nums">
+                {eur.format(montageSumme)}
+              </span>
+            </div>
+          )}
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              Fahrt
+            </span>
+            <select
+              value={fahrtZone ?? "keine"}
+              onChange={(e) => saveFahrt.mutate(e.target.value)}
+              className="min-h-[52px] w-full bg-[var(--color-paper)] border border-[var(--color-hairline)] px-4 text-[17px] focus:border-[var(--color-brand)] focus:border-[1.5px] outline-none"
+            >
+              {FAHRT_OPTIONEN.map((o) => (
+                <option key={o.code} value={o.code}>
+                  {o.label}
+                  {o.brutto > 0 ? ` · ${eur.format(o.brutto)}` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="pt-3 border-t border-[var(--color-hairline)] flex justify-between items-baseline">
             <span className="text-[17px] font-bold">Gesamt</span>
             <span className="text-[26px] font-serif font-bold tabular-nums text-[var(--color-brand)]">
