@@ -347,6 +347,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           fahrt_kosten: number | null
+          fahrt_zone: string | null
           gewerk: string | null
           id: string
           kunde: string
@@ -365,6 +366,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           fahrt_kosten?: number | null
+          fahrt_zone?: string | null
           gewerk?: string | null
           id?: string
           kunde: string
@@ -383,6 +385,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           fahrt_kosten?: number | null
+          fahrt_zone?: string | null
           gewerk?: string | null
           id?: string
           kunde?: string
@@ -603,6 +606,8 @@ export type Database = {
           hoehe_cm: number | null
           id: string
           modell: string | null
+          montage_kosten: number | null
+          montage_typ: string | null
           produkt: string
           projekt_id: string
           schienenfarbe: string | null
@@ -620,6 +625,8 @@ export type Database = {
           hoehe_cm?: number | null
           id?: string
           modell?: string | null
+          montage_kosten?: number | null
+          montage_typ?: string | null
           produkt: string
           projekt_id: string
           schienenfarbe?: string | null
@@ -637,6 +644,8 @@ export type Database = {
           hoehe_cm?: number | null
           id?: string
           modell?: string | null
+          montage_kosten?: number | null
+          montage_typ?: string | null
           produkt?: string
           projekt_id?: string
           schienenfarbe?: string | null
