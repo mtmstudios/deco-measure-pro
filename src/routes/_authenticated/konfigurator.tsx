@@ -158,6 +158,9 @@ function KonfiguratorPage() {
       return;
     }
     toast.success("Zum Angebot hinzugefügt");
+    // Maße/Anzahl für die nächste Position leeren (Produkt/Modell bleiben — meist
+    // gleicher Typ, andere Größe). Verhindert, dass „was vorher drin war" stehen bleibt.
+    zuruecksetzen();
   }
 
   const menge = Math.max(1, Math.round(parseCm(anzahl)) || 1);
