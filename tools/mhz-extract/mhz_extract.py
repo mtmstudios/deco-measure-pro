@@ -257,6 +257,106 @@ MODELS.update({
 })
 
 # ---------------------------------------------------------------------------
+# Duette Wabenplissee (Duette_25.pdf) — 5 Wabengruppen W1–W5. Codes PGW1–PGW5 wie
+# die bestehenden Einträge 11-8120/11-8220. Seiten mit nur PG W2/W3 (Breiten
+# 230–400 cm, nur 6 Sonderstoffe) haben 2er-Bänder und werden bewusst übersprungen.
+# 11-8320/11-8370 (2 Behänge = Summe zweier 8120-Preise) sind hier nicht abbildbar.
+# ---------------------------------------------------------------------------
+_DUETTE = dict(
+    pdf_in_zip="MHZ Preise 25/Duette_25.pdf",
+    produkt="Duette Wabenplissee",
+    const_produkt="DUETTE",
+    gruppen_label="Wabengruppe",
+    pg_labels=["W1", "W2", "W3", "W4", "W5"],
+    pg_name="Wabengruppe",
+)
+_PENDEL = dict(code="PENDELSICHERUNG", name="Pendelsicherung")
+_ELLIPSIS = _fix("ELLIPSIS", "Designelement ELLIPSIS links & rechts (nur ELAN)", 28.50)
+_Q_DU = "MHZ Preisliste 2025, Duette_25.pdf"
+
+MODELS.update({
+    "D-11-8222": dict(
+        _DUETTE, modell="11-8222", pages=(15, 18), min_breite=20,
+        pendel=dict(code="KLEBESET_MSF", name="Klebe-Set mit Seitenführung"),
+        zuschlaege_extra=[
+            dict(code="KLEBESET_OSF", name="Klebe-Set ohne Seitenführung", typ="hoehe_tabelle", wert=39,
+                 hoehen_werte=[39, 39, 39, 42, 45, 47, 51, 53, 57, 60, 62, 65, 69, 72, 75, 77, 80]),
+            _fix("AUSGLEICH", "Ausgleichsvorrichtung (2 St.)", 102.30),
+            _fix("WINKELTRAEGER", "Winkelträger Wandmontage (4 St., pro Anlage)", 14.80),
+            _fix("KLEMMTRAEGER", "Klemmträger (4 St.)", 25.60),
+            _fix("GLASLEISTE", "Glasleistenträger (4 St.)", 7.00),
+            _fix("FENSTERCLIP", "Fensterclips (4 St.)", 17.80),
+            _fix("KLEBETRAEGER", "Klebeträger (4 St.)", 15.00),
+            _ELLIPSIS,
+            _fix("SPANNSCHNUR", "Spannschnurverlängerung (bis 260 cm Höhe)", 6.20),
+        ],
+        quelle=f"{_Q_DU} S. 15–18",
+        note="gespannt, frei verschiebbar, inkl. Aluminiumgriff",
+    ),
+    "D-11-8110": dict(
+        _DUETTE, modell="11-8110", pages=(35, 37), min_breite=30,
+        pendel=_PENDEL,
+        zuschlaege_extra=[
+            _fix("WINKELTRAEGER_3", "3 Winkelträger mit Clip (Wandmontage)", 12.00),
+            _fix("WINKELTRAEGER_5", "5 Winkelträger (Wandmontage mit Pendelsicherung)", 24.20),
+            _fix("KLEMM_2", "Klemmträger 2 St. (bis 99,9 cm)", 12.40),
+            _fix("KLEMM_3", "Klemmträger 3 St. (ab 100 cm)", 18.60),
+            _fix("KLEMM_PENDEL_4", "4 Klemmträger bei Pendelsicherung (bis 99,9 cm)", 30.00),
+            _fix("KLEMM_PENDEL_5", "5 Klemmträger bei Pendelsicherung (ab 100 cm)", 36.20),
+            _fix("GLASLEISTE", "3 Glasleistenträger mit Clip", 6.90),
+            _fix("GLASLEISTE_PENDEL", "5 Glasleistenträger bei Pendelsicherung", 18.70),
+            _ELLIPSIS,
+        ],
+        quelle=f"{_Q_DU} S. 35–37",
+        note="freihängend, Schnurbedienung",
+    ),
+    "D-11-8130": dict(
+        _DUETTE, modell="11-8130", pages=(43, 47), min_breite=35,
+        pendel=_PENDEL,
+        zuschlaege_extra=[
+            _fix("METALLKETTE", "Metallkette", 23.90),
+            _fix("ELEKTRO_24V", "Elektro-Antrieb 24 V (= Modell 11-8140)", 163.20),
+            _fix("SPANNHEBEL_2", "Spannhebelträger 2 St. (bis 149,9 cm)", 0.80),
+            _fix("SPANNHEBEL_3", "Spannhebelträger 3 St. (ab 150 cm)", 1.20),
+            _fix("SPANNHEBEL_5", "Spannhebelträger 5 St. (ab 230 cm)", 2.00),
+            _fix("KLEMM_2", "2 Klemmträger (bis 149,9 cm)", 10.80),
+            _fix("KLEMM_3", "3 Klemmträger (ab 150 cm)", 16.20),
+            _fix("KLEMM_PENDEL_4", "4 Klemmträger bei Pendelsicherung (bis 149,9 cm)", 28.40),
+            _fix("KLEMM_PENDEL_5", "5 Klemmträger bei Pendelsicherung (ab 150 cm)", 33.80),
+            _ELLIPSIS,
+        ],
+        quelle=f"{_Q_DU} S. 43–47",
+        note="freihängend, Kettenbedienung; =11-8140 Elektro; Breiten 230–400 cm (Sonderstoffe) nicht enthalten",
+    ),
+    "D-11-8145": dict(
+        _DUETTE, modell="11-8145", pages=(51, 54), min_breite=75,
+        pendel=_PENDEL,
+        zuschlaege_extra=[
+            _fix("SOMFY_SET1", "Akku-Funk 12 V: Somfy Set 1", 207.50),
+            _fix("SOMFY_SET2", "Akku-Funk 12 V: Somfy Set 2 (+ Situo 1 RTS, Ladenetzteil)", 231.70),
+            _fix("SOMFY_SET3", "Akku-Funk 12 V: Somfy Set 3 (+ Situo 5 RTS II, Ladenetzteil)", 299.10),
+            _fix("WINKEL_PENDEL", "Winkelträger für Pendelsicherung", 12.20),
+            _ELLIPSIS,
+        ],
+        quelle=f"{_Q_DU} S. 51–54",
+        note="freihängend, Akku-Funkantrieb 12 V; Breiten 230–400 cm (Sonderstoffe) nicht enthalten",
+    ),
+    "D-11-8148": dict(
+        _DUETTE, modell="11-8148", pages=(57, 61), min_breite=45,
+        pendel=_PENDEL,
+        zuschlaege_extra=[
+            _fix("POWERVIEW_SET1", "Akku-Funk 18 V: PowerView Set 1", 263.30),
+            _fix("POWERVIEW_SET2", "Akku-Funk 18 V: PowerView Set 2 (+ Pebble, Ladenetzteil)", 361.50),
+            _fix("ELEKTRO_FUNK_18V", "Elektro-Funkantrieb 18 V", 197.40),
+            _fix("WINKEL_PENDEL", "Winkelträger für Pendelsicherung", 12.20),
+            _ELLIPSIS,
+        ],
+        quelle=f"{_Q_DU} S. 57–61",
+        note="freihängend, Elektro-/Akku-Funkantrieb 18 V (PowerView); Breiten 230–400 cm (Sonderstoffe) nicht enthalten",
+    ),
+})
+
+# ---------------------------------------------------------------------------
 # PDF-Helfer
 # ---------------------------------------------------------------------------
 def _num(t):
@@ -473,7 +573,10 @@ def build_ts(cfg, D, widths, heights, pend, bz=None):
     L.append(f" * Quelle: {cfg['quelle']}. UVP inkl. MwSt. in EUR.")
     L.append(" * Extrahiert & verifiziert mit tools/mhz-extract (Vollständigkeit + Monotonie).")
     L.append(" */")
-    name = f"MHZ_{cfg['produkt'].upper()}_{cfg['modell'].replace('-', '_')}"
+    # Konstantenname: const_produkt (z. B. "DUETTE" für "Duette Wabenplissee") sonst Produktname,
+    # Nicht-Wortzeichen → "_", damit gültiges TS entsteht.
+    prefix = cfg.get("const_produkt") or re.sub(r"\W+", "_", cfg["produkt"].upper())
+    name = f"MHZ_{prefix}_{cfg['modell'].replace('-', '_')}"
     L.append(f"export const {name}: Produkt = {{")
     L.append('  hersteller: "MHZ",')
     L.append(f'  produkt: "{cfg["produkt"]}",')
@@ -490,7 +593,7 @@ def build_ts(cfg, D, widths, heights, pend, bz=None):
         code = "PG" + ("A" if lbl == "A" else lbl)
         L.append("    {")
         L.append(f'      code: "{code}",')
-        L.append(f'      name: "Preisgruppe {lbl}",')
+        L.append(f'      name: "{cfg.get("pg_name", "Preisgruppe")} {lbl}",')
         L.append("      raster: {")
         L.append(f"        breiten_cm: {brs},")
         L.append(f"        hoehen_cm: {hrs},")
@@ -521,8 +624,13 @@ def build_ts(cfg, D, widths, heights, pend, bz=None):
             )
     for z in cfg.get("zuschlaege_extra", []):
         wert = f'{z["wert"]:.2f}' if z["typ"] == "fix" else z["wert"]
+        # Zweite höhenabhängige Spalte (z. B. Klebe-Set ohne SF) — Werte manuell aus dem PDF-Bild.
+        extra = (
+            f", hoehen_werte: [{', '.join(str(v) for v in z['hoehen_werte'])}]"
+            if z.get("hoehen_werte") else ""
+        )
         zus.append(
-            f'    {{ code: "{z["code"]}", name: "{z["name"]}", typ: "{z["typ"]}", wert: {wert} }},'
+            f'    {{ code: "{z["code"]}", name: "{z["name"]}", typ: "{z["typ"]}", wert: {wert}{extra} }},'
         )
     if zus:
         L.append("  zuschlaege: [")
