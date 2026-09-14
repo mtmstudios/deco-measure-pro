@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   Blinds,
@@ -25,7 +25,7 @@ import {
   type PreisErgebnis,
 } from "@/lib/preis-engine";
 import { MHZ_PRODUKTE } from "@/lib/preis-data";
-import { MONTAGE_OPTIONEN, type KostenOption } from "@/lib/montage-fahrt";
+import { MONTAGE_OPTIONEN, FAHRT_OPTIONEN, type KostenOption } from "@/lib/montage-fahrt";
 import {
   fehlendePflicht,
   gruppiereOptionen,
@@ -78,7 +78,12 @@ const parseCm = (s: string): number => {
 
 const KATEGORIEN = [...new Set(MHZ_PRODUKTE.map((p) => p.produkt))];
 
-type ProjektRow = { id: string; kunde: string; objekt_bezeichnung: string | null };
+type ProjektRow = {
+  id: string;
+  kunde: string;
+  objekt_bezeichnung: string | null;
+  fahrt_zone?: string | null;
+};
 
 function zuschlagPreis(z: Zuschlag): string {
   if (z.typ === "fix") return eur.format(z.wert);
@@ -89,6 +94,7 @@ function zuschlagPreis(z: Zuschlag): string {
 
 function KonfiguratorPage() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { projekt: projektParam } = Route.useSearch();
 
   // ——— Auswahl ———————————————————————————————————————————————
@@ -110,17 +116,17 @@ function KonfiguratorPage() {
   const [anzahl, setAnzahl] = useState("1");
   const [schienenfarbe, setSchienenfarbe] = useState(SCHIENENFARBEN[0].name);
   const [zuschlaege, setZuschlaege] = useState<string[]>([]);
-  // Montage ist Pflichtwahl — keine stille Vorbelegung (außer Dachfenster).
-  const [montageCode, setMontageCode] = useState("");
+  // Montage folgt der Auswahl oben (siehe Effekt) — Start passend zum ersten Produkt.
+  const [montageCode, setMontageCode] = useState(
+    istDachfenster(MHZ_PRODUKTE[0]) ? "dachfenster" : "verspannt",
+  );
 
   const applyProdukt = (p: (typeof MHZ_PRODUKTE)[number]) => {
     if (istDachfenster(p)) {
       setFensterCode(p.fenster[0].code);
       setGruppeIdx(0);
-      setMontageCode("dachfenster");
     } else {
       setPreisgruppe(p.preisgruppen[0].code);
-      setMontageCode((c) => (c === "dachfenster" ? "" : c));
     }
     setZuschlaege([]);
   };
@@ -153,6 +159,16 @@ function KonfiguratorPage() {
       return next.length === prev.length ? prev : next;
     });
   }, [raster, b]);
+
+  // Montage passt sich an die Auswahl oben an: Dachfenster → Dachfenster-Satz,
+  // Klemmträger-Befestigung → Klemmträger + Klebeleiste, sonst Verspannt.
+  // (Kacheln unten bleiben als Override, z. B. für Sonderfenster.)
+  const hatKlemm = zuschlaege.some((c) => /^KLEMM/i.test(c));
+  useEffect(() => {
+    setMontageCode(
+      istDachfenster(produkt) ? "dachfenster" : hatKlemm ? "klemm_klebe" : "verspannt",
+    );
+  }, [produkt, hatKlemm]);
 
   const ergebnis: PreisErgebnis | null = useMemo(() => {
     try {
@@ -193,7 +209,7 @@ function KonfiguratorPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("projekt")
-        .select("id, kunde, objekt_bezeichnung")
+        .select("id, kunde, objekt_bezeichnung, fahrt_zone")
         .order("created_at", { ascending: false });
       return (data ?? []) as ProjektRow[];
     },
@@ -210,6 +226,25 @@ function KonfiguratorPage() {
     setAnzahl("1");
     setZuschlaege([]);
   };
+
+  // Fahrt gilt je Auftrag (projektweit) — hier gesetzt, greift auf der Projektseite.
+  async function setzeFahrt(code: string) {
+    if (!projektId) return;
+    const opt = FAHRT_OPTIONEN.find((o) => o.code === code);
+    const { error } = await supabase
+      .from("projekt" as never)
+      .update({ fahrt_zone: code, fahrt_kosten: opt ? opt.brutto : null } as never)
+      .eq("id", projektId);
+    if (error) {
+      toast.error(
+        /fahrt_zone|fahrt_kosten|column|does not exist|schema cache/i.test(error.message)
+          ? "Spalten 'fahrt_zone/fahrt_kosten' fehlen noch — bitte Migration anwenden."
+          : error.message,
+      );
+      return;
+    }
+    qc.invalidateQueries({ queryKey: ["projekte-konfigurator"] });
+  }
 
   async function speichern(zielProjektId: string) {
     if (!ergebnis?.lieferbar || !bereit || !montage) return;
@@ -458,7 +493,7 @@ function KonfiguratorPage() {
             </Schritt>
           )}
 
-          <Schritt nr={optionsGruppen.length > 0 ? 6 : 5} titel="Menge & Montage">
+          <Schritt nr={optionsGruppen.length > 0 ? 6 : 5} titel="Menge, Montage & Fahrt">
             <div className="space-y-4">
               <div className="max-w-[180px]">
                 <NumberInput
@@ -495,6 +530,38 @@ function KonfiguratorPage() {
                     );
                   })}
                 </div>
+              </div>
+              <div className="space-y-2">
+                <FeldLabel>
+                  Fahrt <span className="normal-case tracking-normal font-normal">· je Auftrag</span>
+                </FeldLabel>
+                {projektId ? (
+                  <div className="grid sm:grid-cols-2 gap-2" role="radiogroup">
+                    {FAHRT_OPTIONEN.map((o) => {
+                      const aktiv = o.code === (projekt?.fahrt_zone ?? "keine");
+                      return (
+                        <button
+                          key={o.code}
+                          type="button"
+                          role="radio"
+                          aria-checked={aktiv}
+                          aria-label={`Fahrt ${o.label}${o.brutto > 0 ? ", " + eur.format(o.brutto) : ""}`}
+                          onClick={() => void setzeFahrt(o.code)}
+                          className={auswahlKachel(aktiv, "min-h-[52px] px-4 flex items-center justify-between gap-3 text-left")}
+                        >
+                          <span className="text-[15px]">{o.label}</span>
+                          <span className="text-[14px] tabular-nums text-[var(--color-stone-muted)]">
+                            {o.brutto > 0 ? eur.format(o.brutto) : "—"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-[13px] text-[var(--color-stone-muted)]">
+                    Erst Kunde/Projekt wählen — die Fahrt gilt für den ganzen Auftrag.
+                  </p>
+                )}
               </div>
             </div>
           </Schritt>
