@@ -108,7 +108,20 @@ export function berechnePreis(produkt: Produkt, konfig: Konfiguration): PreisErg
 
   const bi = rasterIndex(pg.raster.breiten_cm, b);
   const hi = rasterIndex(pg.raster.hoehen_cm, h);
-  if (bi.ueber || hi.ueber) hinweise.push("Maß über Preisraster — Preis manuell prüfen");
+  // Über dem Preisraster gibt es keinen Listenpreis → NICHT lieferbar (früher: letzter
+  // Rasterpreis + Hinweis — das ließ zu kleine Preise ins Angebot rutschen).
+  if (bi.ueber || hi.ueber) {
+    const maxB = pg.raster.breiten_cm[pg.raster.breiten_cm.length - 1];
+    const maxH = pg.raster.hoehen_cm[pg.raster.hoehen_cm.length - 1];
+    return {
+      lieferbar: false,
+      grundpreis: 0,
+      zuschlaege: [],
+      gesamt: 0,
+      raster: { breite_cm: maxB, hoehe_cm: maxH },
+      hinweise: [...hinweise, `Maß über Preisraster: max. ${maxB} × ${maxH} cm lieferbar.`],
+    };
+  }
 
   const rasterB = pg.raster.breiten_cm[bi.idx];
   const rasterH = pg.raster.hoehen_cm[hi.idx];
