@@ -51,16 +51,31 @@ Die MHZ-Preislisten liegen als ZIP im übergeordneten Projektordner
    diff <(norm src/lib/preis-data.ts) <(norm ../aufmass-engine/src/preis-data.ts)
    ```
 
-## Abgedeckte Layout-Familie
+## Abgedeckte Layouts
 
-Plissee/Duette-Stil: **N Breiten-Gruppen je Band, je Gruppe 5 Preisgruppen**
-(PG A/1/2/3/4), Höhen als Zeilen links, optional eine höhenabhängige
-Aufpreisspalte rechts (Pendelsicherung). Auto-Erkennung der Bänder/Gruppen (5/10/15
-PG-Spalten je Band).
+Grundmuster: **N Breiten-Gruppen je Band, je Gruppe k Preisgruppen** (`pg_labels`),
+Höhen als Zeilen links. Abgedeckt und verifiziert:
 
-Andere Produktfamilien (Rollo, Vertikal-Jalousien/Lamellen, Rollladen) haben
-abweichende Layouts und brauchen ggf. eine angepasste `extract_band`-Variante —
-der Kern (Verifikation, TS-Ausgabe, CLI) bleibt gleich.
+| Familie | PDF | PG | Besonderheiten |
+|---|---|---|---|
+| Plissee/Duette | Plissee_25 / Duette_25 (ZIP) | A,1–4 | `pendel` (höhenabh. Spalte rechts) |
+| Rollo R_03/R_04/R_05 | Rollo-25 (ZIP) | A,1–5 | `breite_zuschlaege` (Befestigungsschiene, Fallstab), `pendel` für Seitenführungsschienen, Max.-Fläche → `null` |
+| Lamellenvorhänge | Liste 2026 als Einzel-PDF (`pdf_file`) | A,1–5 | `breite_zuschlaege` (Biegung, gespannt) enden ab Max.-Breite → `null` |
+
+Registry-Schlüssel:
+- `pdf_in_zip` **oder** `pdf_file` (Einzel-PDF im Preislisten-Ordner, z. B. neue Liste per Mail).
+- `breite_zuschlaege`: `[{code, name, label, dy?}]` — Zeile unter der Matrix, erkannt am
+  Label-Anfang in der linken Spalte, ein Wert je Breite → `typ: "breite_tabelle"`.
+  Fehlende Werte **am Ende** = ab dieser Breite nicht lieferbar (`null`); mittendrin = Fehler.
+- `min_breite`/`min_hoehe` optional — nur setzen, wenn MHZ sie angibt.
+
+Robustheit: Label-Spalte relativ zur ersten PG-Spalte, Kopfzeilen-Cluster (±3 pt),
+Rahmenzeichen an Zahlen werden entfernt, Höhenraster je Band darf kürzer sein,
+leere Zellen am Spaltenende = `null` (nicht lieferbar).
+
+**Nicht abgebildet:** Lamellen-Zeile „+ je 20 cm“ über 300 cm Höhe (Engine meldet
+„über Raster“), R_04/R_05 „inkl. Ausgleichsvorrichtung“ (nur Hinweis), Dachfenster-Rollo
+(Fenstertyp-Tabelle, eigener Extractor nötig).
 
 ## Selbsttest
 

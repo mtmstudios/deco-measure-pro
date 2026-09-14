@@ -35,7 +35,7 @@ export interface Preisgruppe {
   raster: PreisRaster;
 }
 
-export type ZuschlagTyp = "fix" | "prozent" | "pro_m2" | "hoehe_tabelle";
+export type ZuschlagTyp = "fix" | "prozent" | "pro_m2" | "hoehe_tabelle" | "breite_tabelle";
 
 export interface Zuschlag {
   code: string;
@@ -44,6 +44,8 @@ export interface Zuschlag {
   wert: number;
   /** Nur bei typ "hoehe_tabelle": Preis je Höhen-Raster (parallel zu raster.hoehen_cm). */
   hoehen_werte?: number[];
+  /** Nur bei typ "breite_tabelle": Preis je Breiten-Raster (parallel zu raster.breiten_cm). */
+  breiten_werte?: (number | null)[];
 }
 
 export interface Produkt {
@@ -134,6 +136,14 @@ export function berechnePreis(produkt: Produkt, konfig: Konfiguration): PreisErg
     else if (z.typ === "prozent") betrag = (grundpreis * z.wert) / 100;
     else if (z.typ === "pro_m2") betrag = z.wert * ((rasterB * rasterH) / 10000);
     else if (z.typ === "hoehe_tabelle") betrag = z.hoehen_werte?.[hi.idx] ?? 0;
+    else if (z.typ === "breite_tabelle") {
+      const w = z.breiten_werte?.[bi.idx];
+      if (w == null) {
+        hinweise.push(`${z.name}: bei Breite ${rasterB} cm nicht lieferbar`);
+        continue;
+      }
+      betrag = w;
+    }
     zuschlaege.push({ name: z.name, betrag: round(betrag) });
   }
 
