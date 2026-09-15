@@ -532,6 +532,9 @@ function Step1({ raum }: { raum: any }) {
   const [deckentyp, setDeckentyp] = useState<string>(raum.deckentyp ?? "standard");
   const [etage, setEtage] = useState(raum.etage ?? "");
   const [saving, setSaving] = useState(false);
+  // Skizziert? Dann kommen Grundfläche (Boden) + Wandmaße automatisch aus raum.geometrie
+  // → manuelle Länge×Breite (die „Bodenabfrage") ausblenden, nur Raumhöhe bleibt nötig.
+  const hatSkizze = !!(raum as { geometrie?: unknown }).geometrie;
 
   async function save(opts: { silent?: boolean } = {}) {
     setSaving(true);
@@ -605,13 +608,25 @@ function Step1({ raum }: { raum: any }) {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <NumberInput label="Länge" suffix="cm" step={10} min={0} value={laenge} onChange={(e) => setLaenge(e.target.value)} />
-          <NumberInput label="Breite" suffix="cm" step={10} min={0} value={breite} onChange={(e) => setBreite(e.target.value)} />
+          {!hatSkizze && (
+            <>
+              <NumberInput label="Länge" suffix="cm" step={10} min={0} value={laenge} onChange={(e) => setLaenge(e.target.value)} />
+              <NumberInput label="Breite" suffix="cm" step={10} min={0} value={breite} onChange={(e) => setBreite(e.target.value)} />
+            </>
+          )}
           <NumberInput label="Raumhöhe" suffix="cm" step={10} min={0} value={hoehe} onChange={(e) => setHoehe(e.target.value)} />
           <TextField label="Etage" value={etage} onChange={setEtage} placeholder="z. B. EG, 1. OG" />
         </div>
         <p className="text-[12px] text-[var(--color-stone-muted)]">
-          <strong>Raumhöhe</strong> ist immer nötig. <strong>Länge × Breite</strong> nur, wenn du den Raum oben <em>nicht</em> skizzierst — die Wandmaße aus der Skizze werden sonst automatisch verwendet.
+          {hatSkizze ? (
+            <>
+              <strong>Grundfläche & Wandmaße</strong> kommen automatisch aus der <strong>Skizze</strong> oben — hier reicht die <strong>Raumhöhe</strong>. (Zum Ändern die Skizze oben anpassen.)
+            </>
+          ) : (
+            <>
+              <strong>Raumhöhe</strong> ist immer nötig. <strong>Länge × Breite</strong> nur, wenn du den Raum oben <em>nicht</em> skizzierst — die Wandmaße aus der Skizze werden sonst automatisch verwendet.
+            </>
+          )}
         </p>
 
         <div className="space-y-2">
