@@ -3544,9 +3544,10 @@ export const MHZ_DUETTE_11_8148: Produkt = {
 };
 
 export const MHZ_PRODUKTE: AnyProdukt[] = [
-  MHZ_PLISSEE_11_8120,
-  MHZ_PLISSEE_11_8220,
+  // Reihenfolge lt. Nicole (17.09.): 8222 (häufigst) ganz oben, dann 8220.
   MHZ_PLISSEE_11_8222,
+  MHZ_PLISSEE_11_8220,
+  MHZ_PLISSEE_11_8120,
   MHZ_PLISSEE_11_8130,
   MHZ_DUETTE_11_8120,
   MHZ_DUETTE_11_8220,

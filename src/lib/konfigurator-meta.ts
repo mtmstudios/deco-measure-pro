@@ -23,8 +23,9 @@ export const OPTIONS_GRUPPEN: OptionsGruppe[] = [
   { code: "form", label: "Anlagenform", exklusiv: true },
   { code: "antrieb", label: "Bedienung & Antrieb", exklusiv: true },
   { code: "kette", label: "Kette", exklusiv: true },
-  { code: "befestigung", label: "Befestigung", exklusiv: true },
+  // Klebe-Set über die Befestigungen (lt. Nicole am häufigsten, 17.09.).
   { code: "klebeset", label: "Klebe-Set", exklusiv: true },
+  { code: "befestigung", label: "Befestigung", exklusiv: true },
   { code: "extras", label: "Extras", exklusiv: false },
 ];
 
