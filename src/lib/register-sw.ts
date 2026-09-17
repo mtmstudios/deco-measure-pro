@@ -1,58 +1,17 @@
 /**
- * Guarded Service-Worker-Registrierung.
+ * Guarded Service-Worker-Registrierung mit automatischem Update.
  * - Nur in echter Produktions-Umgebung (kein Dev, keine Lovable-Preview).
+ * - `registerType: "autoUpdate"` (vite.config) → ein neuer SW übernimmt sofort
+ *   (skipWaiting + clientsClaim). Damit die BEREITS GEÖFFNETE Seite die neue
+ *   Version auch wirklich lädt, wird bei `controllerchange` EINMAL neu geladen —
+ *   aber nur, wenn vorher schon ein Controller lief (sonst wäre es der Erst-Install
+ *   und wir würden beim ersten Besuch unnötig neu laden).
+ *   → So bleibt niemand auf einer alten, evtl. fehlerhaften Version hängen.
+ * - Beim Start und bei jeder Rückkehr in die App wird auf Updates geprüft.
  * - `?sw=off` als Kill-Switch: hebt bestehende Registrierungen auf.
  */
 
-import { toast } from "sonner";
-
 const SW_PATH = "/sw.js";
-
-let updatePromptShown = false;
-
-/** Toast „Neue Version verfügbar" mit Neu-laden-Aktion (nur einmal). */
-function promptUpdate(): void {
-  if (updatePromptShown) return;
-  updatePromptShown = true;
-  toast("Neue Version verfügbar", {
-    description: "Aktualisiere, um die neuesten Änderungen zu laden.",
-    duration: Infinity,
-    action: {
-      label: "Neu laden",
-      onClick: () => window.location.reload(),
-    },
-  });
-}
-
-/**
- * Erkennt eine neue App-Version (neuer Service Worker) und zeigt den Hinweis.
- * Prüft zusätzlich bei jeder Rückkehr in die App auf Updates — praktisch für
- * eine Home-Bildschirm-App, die selten komplett geschlossen wird.
- */
-function watchForUpdate(reg: ServiceWorkerRegistration): void {
-  // Update wurde schon vor dieser Sitzung installiert und wartet.
-  if (reg.waiting && navigator.serviceWorker.controller) promptUpdate();
-
-  reg.addEventListener("updatefound", () => {
-    const nw = reg.installing;
-    if (!nw) return;
-    nw.addEventListener("statechange", () => {
-      // "installed" bei bestehendem Controller = echtes Update (kein Erst-Install).
-      if (nw.state === "installed" && navigator.serviceWorker.controller) {
-        promptUpdate();
-      }
-    });
-  });
-
-  // Bei Rückkehr in die App nach neuen Versionen suchen.
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-      reg.update().catch(() => {
-        /* offline o. ä. — ignorieren */
-      });
-    }
-  });
-}
 
 function isRefusedContext(): boolean {
   if (typeof window === "undefined") return true;
@@ -100,9 +59,29 @@ export async function registerServiceWorker(): Promise<void> {
     if ("serviceWorker" in navigator) await unregisterMatching();
     return;
   }
+
+  // Automatisches Neuladen, sobald ein neuer SW die Kontrolle übernimmt.
+  // Nur wenn bereits ein Controller aktiv ist → kein Reload beim Erst-Install.
+  if (navigator.serviceWorker.controller) {
+    let reloading = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (reloading) return;
+      reloading = true;
+      window.location.reload();
+    });
+  }
+
   try {
     const reg = await navigator.serviceWorker.register(SW_PATH, { scope: "/" });
-    watchForUpdate(reg);
+    // Beim Start + bei jeder Rückkehr in die App auf neue Versionen prüfen.
+    const check = () =>
+      reg.update().catch(() => {
+        /* offline o. ä. — ignorieren */
+      });
+    check();
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") check();
+    });
   } catch (err) {
     console.warn("[sw] register failed", err);
   }
